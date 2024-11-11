@@ -1,6 +1,6 @@
 # graduation_project
 
-A new Flutter project.
+Mobile App done by using Flutter Technolory for Access Control System
 
 ## Getting Started
 
