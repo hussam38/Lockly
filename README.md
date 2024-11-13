@@ -1,6 +1,6 @@
 # graduation_project
 
-Mobile App done by using Flutter Technolory for Access Control System
+Mobile App done by using Flutter Technology for Access Control System
 
 ## Getting Started
 

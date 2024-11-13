@@ -2,10 +2,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/utils/colors.dart';
-import 'package:flutter/services.dart';
 import 'package:graduation_project/utils/components.dart';
 import 'package:graduation_project/utils/values_manager.dart';
-
 import '../../utils/router.dart';
 
 class UserLoginScreen extends StatefulWidget {
