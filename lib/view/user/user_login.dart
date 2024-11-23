@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/components.dart';
@@ -65,7 +66,7 @@ class _UserLoginScreenState extends State<UserLoginScreen>
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: true,
       body: SizedBox(
-        height: size.height,
+        height: size.height.h,
         child: Container(
           alignment: Alignment.center,
           decoration: const BoxDecoration(
@@ -81,8 +82,8 @@ class _UserLoginScreenState extends State<UserLoginScreen>
               scale: _transform.value,
               child: SafeArea(
                 child: Container(
-                  width: size.width * .9,
-                  height: size.width,
+                  width: size.width * .9.w,
+                  height: size.width.h,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(AppSize.s14),
@@ -99,7 +100,7 @@ class _UserLoginScreenState extends State<UserLoginScreen>
                         ),
                       ),
                       SizedBox(
-                        height: size.width * .1,
+                        height: size.width * .1.h,
                       ),
                       textFormComponent(
                         controller: emailController,
@@ -130,7 +131,7 @@ class _UserLoginScreenState extends State<UserLoginScreen>
                         },
                       ),
                       SizedBox(
-                        height: size.width * .1,
+                        height: size.width * .1.h,
                       ),
                       buttonComponent(
                         'LOGIN',

@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/components.dart';
@@ -81,8 +82,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
               scale: _transform.value,
               child: SafeArea(
                 child: Container(
-                  width: size.width * .9,
-                  height: size.width * 1.1,
+                  width: size.width * .9.w,
+                  height: size.width * 1.1.h,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(AppSize.s14),
@@ -99,7 +100,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                         ),
                       ),
                       SizedBox(
-                        height: size.width * .1,
+                        height: size.width * .1.h,
                       ),
                       textFormComponent(
                         controller: emailController,
@@ -114,7 +115,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                         },
                       ),
                       SizedBox(
-                        height: size.width * .1,
+                        height: size.width * .1.h,
                       ),
                       textFormComponent(
                         controller: passwordController,
@@ -130,7 +131,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
                         },
                       ),
                       SizedBox(
-                        height: size.width * .1,
+                        height: size.width * .1.h,
                       ),
                       buttonComponent(
                         'LOGIN',

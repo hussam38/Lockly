@@ -1,10 +1,9 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:graduation_project/utils/components.dart';
 import 'package:graduation_project/utils/router.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import '../../utils/colors.dart';
 import '../../utils/font_manager.dart';
 import '../../utils/strings_manager.dart';
@@ -22,9 +21,12 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
 
   GlobalKey<FormState> formPhoneKey = GlobalKey<FormState>();
 
+  PhoneNumber phone = PhoneNumber(isoCode: 'EG');
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.symmetric(
@@ -40,7 +42,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
               SizedBox(height: AppSize.s50.h),
               buildSecondTextSection(context),
               SizedBox(height: AppSize.s50.h),
-              buildTextField(context),
+              buildPhoneField(),
             ],
           ),
         ),
@@ -50,7 +52,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
         extendedPadding: EdgeInsets.all(AppPadding.p30.w),
         label: Text(
           AppStrings.next,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
       ),
     );
@@ -80,52 +82,31 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
     );
   }
 
-  Widget buildTextField(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 1,
-          child: TextFormField(
-            enabled: false,
-            decoration: InputDecoration(
-              labelText: '${generateCountryFlag()}  +20',
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Container(
-            width: double.infinity,
-            height: 200,
-            padding: EdgeInsets.symmetric(
-                horizontal: AppPadding.p12.w, vertical: AppPadding.p16.w),
-            child: textFormComponent(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              onChanged: (value) {},
-              hintText: "Phone Number",
-              context: context,
-              prefixIcon: Icons.phone,
-              validate: (value) {
-                if (value!.isEmpty || value.length < 11) {
-                  return AppStrings.phoneError;
-                } else if (!value.startsWith("01")) {
-                  return "Not a Valid Number";
-                }
-                return null;
-              },
-            ),
-          ),
-        ),
-      ],
+  Widget buildPhoneField() {
+    return InternationalPhoneNumberInput(
+      onInputChanged: (phone) {
+        setState(() {
+          this.phone = phone;
+        });
+      },
+      selectorConfig: const SelectorConfig(
+        selectorType: PhoneInputSelectorType.DROPDOWN,
+      ),
+      ignoreBlank: false,
+      autoValidateMode: AutovalidateMode.onUserInteraction,
+      initialValue: phone,
+      textFieldController: phoneController,
+      inputBorder: const OutlineInputBorder(),
+      validator: (value) {
+        if (value!.isEmpty || value.length < 11) {
+          return AppStrings.phoneError;
+        } else if (!value.startsWith("01") || value.length > 11) {
+          return AppStrings.notValidNumber;
+        }
+        return null;
+      },
+      countries: const ['EG', 'SA'], // Optional: Limit countries
     );
-  }
-
-  String generateCountryFlag() {
-    String countryCode = "eg";
-    String flag = countryCode.toUpperCase().replaceAllMapped(RegExp(r'[A-Z]'),
-        (match) => String.fromCharCode(match.group(0)!.codeUnitAt(0) + 127397));
-    return flag;
   }
 
   void onTap() {

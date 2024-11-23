@@ -6,6 +6,7 @@ class AppStrings {
   static const String verify = "Verify";
   static const String phoneHint = "please enter your phone number";
   static const String phoneError = "phone number is too short";
+  static const String notValidNumber = "Not a Valid Number";
   static const String verifyMessage = "Verify your phone number";
   static const String verifyCond =
       "Enter your six digit code number sent to you at ";

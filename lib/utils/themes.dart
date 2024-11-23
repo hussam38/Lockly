@@ -34,7 +34,7 @@ ThemeData whiteTheme() {
         labelMedium:
             getBoldStyle(color: ColorManager.grey, fontSize: FontSize.s18),
         labelSmall:
-            getLightStyle(color: ColorManager.white, fontSize: FontSize.s12),
+            getLightStyle(color: ColorManager.grey, fontSize: FontSize.s12),
         titleSmall:
             getRegularStyle(color: ColorManager.grey, fontSize: FontSize.s16),
         bodyMedium:

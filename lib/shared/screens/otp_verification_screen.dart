@@ -115,10 +115,6 @@ class OTPVerificationScreen extends StatelessWidget {
   }
 
   void onTap() {
-    if (Constants.loginAs == "admin") {
-      Get.toNamed(AppRouter.adminHomeRoute);
-    } else {
-      Get.toNamed(AppRouter.userHomeRoute);
-    }
+    Get.offAllNamed(AppRouter.layout);
   }
 }

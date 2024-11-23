@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:graduation_project/shared/screens/layout_screen.dart';
 import 'package:graduation_project/shared/screens/role_selection_screen.dart';
 import 'package:graduation_project/shared/screens/splash_screen.dart';
 import 'package:graduation_project/view/admin/admin_home.dart';
@@ -16,6 +17,7 @@ class AppRouter {
   static const String roleSelectionRoute = '/role-selection';
   static const String phoneEnterRoute = '/phone-entry';
   static const String otpVerificationRoute = '/otp-verification';
+  static const String layout = '/layout';
   // admin routes
   static const String adminLoginRoute = '/admin-login';
   static const String adminRegisterRoute = '/admin-register';
@@ -58,6 +60,11 @@ class AppRouter {
     GetPage(
       name: otpVerificationRoute,
       page: () => OTPVerificationScreen(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: layout,
+      page: () => const LayoutScreen(),
       transition: Transition.cupertino,
     ),
     GetPage(

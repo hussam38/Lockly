@@ -1,18 +1,17 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/themes.dart';
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class LocklyApp extends StatefulWidget {
+  const LocklyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<LocklyApp> createState() => _LocklyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _LocklyAppState extends State<LocklyApp> {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
