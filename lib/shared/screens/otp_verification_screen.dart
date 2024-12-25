@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:graduation_project/utils/constants.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../utils/colors.dart';
 import '../../utils/font_manager.dart';
@@ -15,6 +14,7 @@ class OTPVerificationScreen extends StatelessWidget {
   OTPVerificationScreen({super.key});
 
   String phoneNumber = Get.arguments["phoneNumber"];
+  String country = Get.arguments["country"];
   final codeController = TextEditingController();
 
   @override
@@ -69,7 +69,7 @@ class OTPVerificationScreen extends StatelessWidget {
             style: Theme.of(ctx).textTheme.bodyMedium!.copyWith(height: 1.4),
             children: [
               TextSpan(
-                text: "+2$phoneNumber",
+                text: country == 'EG' ? "+2$phoneNumber" : "+$phoneNumber",
                 style: Theme.of(ctx).textTheme.bodyMedium!.copyWith(
                       color: ColorManager.primarycolor,
                     ),
@@ -104,10 +104,7 @@ class OTPVerificationScreen extends StatelessWidget {
       cursorColor: ColorManager.black,
       enableActiveFill: true,
       controller: codeController,
-      onCompleted: (v) {
-        log("string from controller -> ${codeController.text}");
-        log("string from v -> $v");
-      },
+      onCompleted: (v) {},
       onChanged: (value) {
         log(value);
       },

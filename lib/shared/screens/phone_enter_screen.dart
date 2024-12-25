@@ -1,9 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/utils/router.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
+import '../../utils/asset_manager.dart';
 import '../../utils/colors.dart';
 import '../../utils/font_manager.dart';
 import '../../utils/strings_manager.dart';
@@ -21,7 +22,18 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
 
   GlobalKey<FormState> formPhoneKey = GlobalKey<FormState>();
 
-  PhoneNumber phone = PhoneNumber(isoCode: 'EG');
+  String selectedCountry = 'EG';
+  String? errorText;
+  final Map<String, Map<String, String>> countries = {
+    'EG': {
+      'code': '+20',
+      'flag': AssetsManager.egIcon,
+    },
+    'SA': {
+      'code': '+966',
+      'flag': AssetsManager.saIcon,
+    }
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -83,37 +95,93 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   }
 
   Widget buildPhoneField() {
-    return InternationalPhoneNumberInput(
-      onInputChanged: (phone) {
-        setState(() {
-          this.phone = phone;
-        });
-      },
-      selectorConfig: const SelectorConfig(
-        selectorType: PhoneInputSelectorType.DROPDOWN,
-      ),
-      ignoreBlank: false,
-      autoValidateMode: AutovalidateMode.onUserInteraction,
-      initialValue: phone,
-      textFieldController: phoneController,
-      inputBorder: const OutlineInputBorder(),
-      validator: (value) {
-        if (value!.isEmpty || value.length < 11) {
-          return AppStrings.phoneError;
-        } else if (!value.startsWith("01") || value.length > 11) {
-          return AppStrings.notValidNumber;
-        }
-        return null;
-      },
-      countries: const ['EG', 'SA'], // Optional: Limit countries
+    return Row(
+      children: [
+        // Dropdown for country selection with flags
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppPadding.p8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(AppSize.s5),
+          ),
+          child: DropdownButton<String>(
+            value: selectedCountry,
+            icon: const Icon(Icons.arrow_drop_down),
+            underline: const SizedBox(),
+            items: countries.keys.map((String country) {
+              return DropdownMenuItem<String>(
+                value: country,
+                child: Row(
+                  children: [
+                    SvgPicture.asset(
+                      countries[country]!['flag']!,
+                      width: AppSize.s24.w,
+                      height: AppSize.s24.h,
+                    ),
+                    SizedBox(width: AppSize.s8.w),
+                    Text(country),
+                  ],
+                ),
+              );
+            }).toList(),
+            onChanged: (String? newCountry) {
+              setState(() {
+                selectedCountry = newCountry!;
+                phoneController
+                    .clear(); // Clear the phone number when changing the country
+                errorText = null; // Clear the error message
+              });
+            },
+          ),
+        ),
+        SizedBox(width: 10.w),
+        // TextFormField for phone number
+        Expanded(
+          child: TextFormField(
+            controller: phoneController,
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.phone),
+              hintText: AppStrings.phoneHint,
+              border: const OutlineInputBorder(),
+              errorText: errorText, // Display error message
+            ),
+            onChanged: (value) {
+              setState(() {
+                errorText =
+                    validatePhoneNumber(value); // Update validation error
+              });
+            },
+          ),
+        ),
+      ],
     );
   }
 
   void onTap() {
     if (formPhoneKey.currentState!.validate()) {
-      Get.toNamed(AppRouter.otpVerificationRoute,
-          arguments: {"phoneNumber": phoneController.text});
+      Get.toNamed(AppRouter.otpVerificationRoute, arguments: {
+        "phoneNumber": phoneController.text,
+        "country": selectedCountry
+      });
     }
+  }
+
+  String? validatePhoneNumber(String value) {
+    if (value.isEmpty) {
+      return AppStrings.phoneEmpty;
+    }
+    // Validation based on the selected country
+    if (selectedCountry == 'EG') {
+      if (!value.startsWith('01') || value.length != 11) {
+        return AppStrings.notValidEGNumber;
+      }
+    } else if (selectedCountry == 'SA') {
+      if (!value.startsWith('966') || value.length != 9) {
+        return AppStrings.notValidSANumber;
+      }
+    }
+    return null; // Return null if valid
   }
 
   @override

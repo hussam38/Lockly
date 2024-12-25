@@ -21,7 +21,7 @@ class _LocklyAppState extends State<LocklyApp> {
       builder: (_, child) {
         return GetMaterialApp(
           theme: whiteTheme(),
-          locale: Get.deviceLocale,
+          locale: const Locale('en', 'US'),
           debugShowCheckedModeBanner: false,
           initialRoute: AppRouter.initRoute,
           getPages: AppRouter.routes,
