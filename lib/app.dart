@@ -24,9 +24,8 @@ class _LocklyAppState extends State<LocklyApp> {
           theme: whiteTheme(),
           locale: const Locale('en', 'US'),
           debugShowCheckedModeBanner: false,
-          // initialRoute: AppRouter.initRoute,
+          initialRoute: AppRouter.initRoute,
           getPages: AppRouter.routes,
-          home: LayoutScreen(),
         );
       },
     );
