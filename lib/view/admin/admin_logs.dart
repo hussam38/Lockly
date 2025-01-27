@@ -400,7 +400,7 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
                     ],
                   ),
                 ),
-              )).toList(),
+              )),
             ],
           );
         },
