@@ -1,0 +1,8 @@
+
+-----Logs----------------------------
+// User logins and logouts
+// Successful and failed access attempts
+// Admin actions (such as user management, CRUD operations on users or objects)
+// Notifications sent (e.g., 2FA notifications)
+// Errors or exceptions in the application
+-------------------------------------

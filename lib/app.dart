@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/shared/screens/layout_screen.dart';
 import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/themes.dart';
 
@@ -23,8 +24,9 @@ class _LocklyAppState extends State<LocklyApp> {
           theme: whiteTheme(),
           locale: const Locale('en', 'US'),
           debugShowCheckedModeBanner: false,
-          initialRoute: AppRouter.initRoute,
+          // initialRoute: AppRouter.initRoute,
           getPages: AppRouter.routes,
+          home: LayoutScreen(),
         );
       },
     );

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'font_manager.dart';
 
 TextStyle _getTextStyle(double fontSize, FontWeight fontWeight, Color color) {
   return TextStyle(
-      fontSize: fontSize,
+      fontSize: fontSize.sp,
       fontFamily: FontConstants.fontFamily,
       color: color,
       fontWeight: fontWeight);

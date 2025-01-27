@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/constants.dart';
-import 'package:graduation_project/view/admin/admin_scene.dart';
-import 'package:graduation_project/view/user/user_scene.dart';
+import 'package:graduation_project/view/admin/admin_logs.dart';
 import 'package:graduation_project/view/user/user_settings.dart';
 import '../../view/admin/admin_home.dart';
 import '../../view/admin/admin_settings.dart';
@@ -19,19 +18,18 @@ class _LayoutScreenState extends State<LayoutScreen> {
   int currentIndex = 0;
   List<Widget> user_screens = [
     const UserHomeScreen(),
-    const UserSceneScreen(),
     const UserSettings(),
   ];
   List<Widget> admin_screens = [
     const AdminHomeScreen(),
-    const AdminSceneScreen(),
+    AdminLogsScreen(),
     const AdminSettingsScreen(),
   ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Constants.loginAs == 'admin'
+        child: Constants.loginAs == 'admin' || Constants.loginAs == ''
             ? admin_screens[currentIndex]
             : user_screens[currentIndex],
       ),
@@ -39,7 +37,7 @@ class _LayoutScreenState extends State<LayoutScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.edit_calendar), label: 'Scene'),
+              icon: Icon(Icons.list_alt), label: 'Logs'),
           BottomNavigationBarItem(
               icon: Icon(Icons.settings), label: 'Settings'),
         ],
