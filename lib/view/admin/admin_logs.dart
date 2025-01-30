@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:graduation_project/utils/style_manager.dart';
 import 'package:intl/intl.dart';
+import '../../model/logs_model.dart';
 
 class AdminLogsScreen extends StatefulWidget {
   const AdminLogsScreen({super.key});
@@ -409,20 +410,3 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
   }
 }
 
-class LogEntry {
-  final String timestamp;
-  final String action;
-  final String status;
-  final String details;
-  final String userName;
-  final String object;
-
-  const LogEntry({
-    required this.timestamp,
-    required this.action,
-    required this.status,
-    required this.details,
-    required this.userName,
-    required this.object,
-  });
-}
