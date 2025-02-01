@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/constants.dart';
-import 'package:graduation_project/view/admin/admin_logs.dart';
 import 'package:graduation_project/view/user/user_settings.dart';
 import '../../view/admin/admin_home.dart';
+import '../../view/admin/admin_logs.dart';
 import '../../view/admin/admin_settings.dart';
 import '../../view/user/user_home.dart';
 
@@ -22,7 +22,7 @@ class _LayoutScreenState extends State<LayoutScreen> {
   ];
   List<Widget> admin_screens = [
     const AdminHomeScreen(),
-    const AdminLogsScreen(),
+    AdminLogsScreen(),
     const AdminSettingsScreen(),
   ];
   @override

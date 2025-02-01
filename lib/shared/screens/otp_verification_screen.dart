@@ -40,7 +40,7 @@ class OTPVerificationScreen extends StatelessWidget {
         extendedPadding: EdgeInsets.all(AppPadding.p30.w),
         label: Text(
           AppStrings.verify,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
       ),
     );

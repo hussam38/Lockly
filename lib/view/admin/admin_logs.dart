@@ -90,9 +90,12 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
     final groupedLogs = _groupLogsByDate(filteredLogs);
 
     return Scaffold(
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
         title: const Text("Logs"),
-        centerTitle: false,
+        centerTitle: false,   
+        backgroundColor: Colors.white,
+        elevation: 0.0,     
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {

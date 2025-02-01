@@ -5,8 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/utils/router.dart';
 import '../../utils/asset_manager.dart';
-import '../../utils/colors.dart';
-import '../../utils/font_manager.dart';
 import '../../utils/strings_manager.dart';
 import '../../utils/values_manager.dart';
 
@@ -73,13 +71,8 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   Widget buildFirstTextSection(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(top: AppPadding.p12.w),
-      child: Text(
-        AppStrings.ask,
-        style: Theme.of(context)
-            .textTheme
-            .titleMedium!
-            .copyWith(color: ColorManager.black, fontSize: FontSize.s20),
-      ),
+      child:
+          Text(AppStrings.ask, style: Theme.of(context).textTheme.displaySmall),
     );
   }
 
@@ -119,7 +112,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                       height: AppSize.s24.h,
                     ),
                     SizedBox(width: AppSize.s8.w),
-                    Text(country),
+                    Text(country, style: Theme.of(context).textTheme.labelSmall,),
                   ],
                 ),
               );
