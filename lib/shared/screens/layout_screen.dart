@@ -22,7 +22,7 @@ class _LayoutScreenState extends State<LayoutScreen> {
   ];
   List<Widget> admin_screens = [
     const AdminHomeScreen(),
-    AdminLogsScreen(),
+    const AdminLogsScreen(),
     const AdminSettingsScreen(),
   ];
   @override

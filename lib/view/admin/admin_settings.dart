@@ -10,15 +10,17 @@ class AdminSettingsScreen extends StatefulWidget {
 }
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
-  bool isDarkTheme = false; 
-  bool isNotificationsEnabled =
-      true; 
+  bool isDarkTheme = false;
+  bool isNotificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(
+          'Settings',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         backgroundColor: ColorManager.primarycolor,
       ),
       body: ListView(
@@ -30,32 +32,26 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15.0),
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(16.0),
+            child: Padding(
+              padding: EdgeInsets.all(16.0.w),
               child: Row(
                 children: [
                   CircleAvatar(
                     backgroundColor: Colors.pink,
-                    radius: 30.0,
+                    radius: 30.0.w,
                   ),
-                  SizedBox(width: 16.0),
+                  SizedBox(width: 16.0.w),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Hussam Nasser',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      SizedBox(height: 4.0),
+                      SizedBox(height: 4.0.h),
                       Text(
-                        'Hussam@mail.com', 
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          color: Colors.grey,
-                        ),
+                        'Hussam@mail.com',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -63,16 +59,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.0.h),
           Card(
             elevation: 4.0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
+              borderRadius: BorderRadius.circular(15.0.w),
             ),
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.lock, color: ColorManager.primarycolor),
+                  leading:
+                      const Icon(Icons.lock, color: ColorManager.primarycolor),
                   title: const Text('Change Password'),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
@@ -81,8 +78,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
                 const Divider(),
                 ListTile(
-                  leading: const Icon(Icons.people, color: ColorManager.primarycolor),
-                  title: const Text('Manage Users'),
+                  leading: const Icon(Icons.people,
+                      color: ColorManager.primarycolor),
+                  title: Text(
+                    'Manage Users',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     // Handle manage users
@@ -90,8 +91,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
                 const Divider(),
                 ListTile(
-                  leading: const Icon(Icons.devices, color: ColorManager.primarycolor),
-                  title: const Text('Manage Devices'),
+                  leading: const Icon(Icons.devices,
+                      color: ColorManager.primarycolor),
+                  title: Text(
+                    'Manage Devices',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     // Handle manage devices
@@ -99,7 +104,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
                 const Divider(),
                 SwitchListTile(
-                  title: const Text('Dark Theme'),
+                  title: Text(
+                    'Dark Theme',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   value: isDarkTheme,
                   onChanged: (bool value) {
                     setState(() {
@@ -107,11 +115,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       // Handle theme change
                     });
                   },
-                  secondary: const Icon(Icons.brightness_6, color: ColorManager.primarycolor),
+                  secondary: const Icon(Icons.brightness_6,
+                      color: ColorManager.primarycolor),
                 ),
                 const Divider(),
                 SwitchListTile(
-                  title: const Text('Enable Notifications'),
+                  title: Text(
+                    'Enable Notifications',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   value: isNotificationsEnabled,
                   onChanged: (bool value) {
                     setState(() {
@@ -119,12 +131,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       // Handle notification setting change
                     });
                   },
-                  secondary: const Icon(Icons.notifications, color: ColorManager.primarycolor),
+                  secondary: const Icon(Icons.notifications,
+                      color: ColorManager.primarycolor),
                 ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.redAccent),
-                  title: const Text('Logout'),
+                  title: Text(
+                    'Logout',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     // Handle logout
