@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:graduation_project/utils/colors.dart';
+import 'package:graduation_project/utils/router.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -19,9 +21,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       appBar: AppBar(
         title: Text(
           'Settings',
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
-        backgroundColor: ColorManager.primarycolor,
+        backgroundColor: ColorManager.white,
+        elevation: 20.0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
@@ -41,19 +44,22 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     radius: 30.0.w,
                   ),
                   SizedBox(width: 16.0.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hussam Nasser',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      SizedBox(height: 4.0.h),
-                      Text(
-                        'Hussam@mail.com',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hussam Nasser',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                        SizedBox(height: 4.0.h),
+                        Text(
+                          'Hussam@mail-server.com',
+                          style: Theme.of(context).textTheme.labelSmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -70,11 +76,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ListTile(
                   leading:
                       const Icon(Icons.lock, color: ColorManager.primarycolor),
-                  title: const Text('Change Password'),
+                  title: Text(
+                    'Edit Information',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
                   trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    // Handle change password
-                  },
+                  onTap: () {},
                 ),
                 const Divider(),
                 ListTile(
@@ -82,37 +89,23 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       color: ColorManager.primarycolor),
                   title: Text(
                     'Manage Users',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
-                    // Handle manage users
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.devices,
-                      color: ColorManager.primarycolor),
-                  title: Text(
-                    'Manage Devices',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    // Handle manage devices
+                    Get.toNamed(AppRouter.manageUsersRoute);
                   },
                 ),
                 const Divider(),
                 SwitchListTile(
                   title: Text(
                     'Dark Theme',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   value: isDarkTheme,
                   onChanged: (bool value) {
                     setState(() {
                       isDarkTheme = value;
-                      // Handle theme change
                     });
                   },
                   secondary: const Icon(Icons.brightness_6,
@@ -122,13 +115,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 SwitchListTile(
                   title: Text(
                     'Enable Notifications',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   value: isNotificationsEnabled,
                   onChanged: (bool value) {
                     setState(() {
                       isNotificationsEnabled = value;
-                      // Handle notification setting change
                     });
                   },
                   secondary: const Icon(Icons.notifications,
@@ -139,11 +131,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   leading: const Icon(Icons.logout, color: Colors.redAccent),
                   title: Text(
                     'Logout',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
-                    // Handle logout
+                    Get.offAllNamed(AppRouter.roleSelectionRoute);
                   },
                 ),
               ],

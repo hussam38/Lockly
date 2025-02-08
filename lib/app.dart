@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+// import 'package:graduation_project/shared/screens/layout_screen.dart';
 import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/themes.dart';
+// import 'package:graduation_project/view/admin/admin_home.dart';
+// import 'package:graduation_project/view/admin/admin_settings.dart';
 
 class LocklyApp extends StatefulWidget {
   const LocklyApp({super.key});
@@ -25,6 +28,7 @@ class _LocklyAppState extends State<LocklyApp> {
           debugShowCheckedModeBanner: false,
           initialRoute: AppRouter.initRoute,
           getPages: AppRouter.routes,
+          // home: const AdminHomeScreen(),
         );
       },
     );

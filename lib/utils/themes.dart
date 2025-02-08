@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/font_manager.dart';
 import 'package:graduation_project/utils/style_manager.dart';
@@ -9,15 +10,19 @@ ThemeData whiteTheme() {
       useMaterial3: true,
       primaryColor: ColorManager.primarycolor,
       scaffoldBackgroundColor: ColorManager.white,
+
       //appbar theme
       appBarTheme: AppBarTheme(
-        centerTitle: true,
-        backgroundColor: ColorManager.white,
-        elevation: 0.0,
-        iconTheme: IconThemeData(
-          color: ColorManager.black,
-        ),
-      ),
+          centerTitle: true,
+          backgroundColor: ColorManager.white,
+          elevation: 0.0,
+          iconTheme: IconThemeData(
+            color: ColorManager.black,
+          ),
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: ColorManager.white,
+            statusBarIconBrightness: Brightness.dark,
+          )),
 
       //text theme
       textTheme: TextTheme(
@@ -31,14 +36,18 @@ ThemeData whiteTheme() {
             getBoldStyle(color: ColorManager.grey, fontSize: FontSize.s32),
         headlineMedium:
             getSemiBoldStyle(color: ColorManager.grey, fontSize: FontSize.s16),
-        titleMedium:
-            getMediumStyle(color: ColorManager.grey, fontSize: FontSize.s12),
+        headlineSmall:
+            getRegularStyle(color: ColorManager.black, fontSize: FontSize.s15),
         labelMedium:
-            getBoldStyle(color: ColorManager.grey, fontSize: FontSize.s18),
+            getSemiBoldStyle(color: ColorManager.grey, fontSize: FontSize.s18),
         labelSmall:
-            getLightStyle(color: ColorManager.grey, fontSize: FontSize.s12),
+            getRegularStyle(color: ColorManager.grey, fontSize: FontSize.s14),
+        titleLarge:
+            getSemiBoldStyle(color: ColorManager.grey, fontSize: FontSize.s18),
+        titleMedium:
+            getMediumStyle(color: ColorManager.grey, fontSize: FontSize.s16),
         titleSmall:
-            getRegularStyle(color: ColorManager.grey, fontSize: FontSize.s16),
+            getRegularStyle(color: ColorManager.grey, fontSize: FontSize.s12),
         bodyMedium:
             getRegularStyle(color: ColorManager.grey, fontSize: FontSize.s15),
         bodyLarge:

@@ -5,11 +5,15 @@ import 'package:graduation_project/shared/screens/splash_screen.dart';
 import 'package:graduation_project/view/admin/admin_home.dart';
 import 'package:graduation_project/view/admin/admin_login.dart';
 import 'package:graduation_project/view/admin/admin_register.dart';
+import 'package:graduation_project/view/admin/admin_settings.dart';
+import 'package:graduation_project/view/admin/manage_users_screen.dart';
 import 'package:graduation_project/view/user/user_home.dart';
 import 'package:graduation_project/view/user/user_login.dart';
+import 'package:graduation_project/view/user/user_settings.dart';
 
 import '../shared/screens/otp_verification_screen.dart';
 import '../shared/screens/phone_enter_screen.dart';
+import '../view/admin/admin_logs.dart';
 
 class AppRouter {
   // shared routes
@@ -22,59 +26,100 @@ class AppRouter {
   static const String adminLoginRoute = '/admin-login';
   static const String adminRegisterRoute = '/admin-register';
   static const String adminHomeRoute = '/admin-home';
+  static const String adminLogsRoute = '/admin-logs';
+  static const String adminSettingsRoute = '/admin-settings';
+  static const String manageUsersRoute = '/manage-users';
   // user routes
   static const String userLoginRoute = '/user-login';
   static const String userHomeRoute = '/user-home';
+  static const String userSettingsRoute = '/user-settings';
 
   static final List<GetPage> routes = [
+    // splash
     GetPage(
       name: initRoute,
       page: () => const SplashScreen(),
       transition: Transition.cupertino,
     ),
+    // common
+    // role-selection
     GetPage(
       name: roleSelectionRoute,
       page: () => const RoleSelectionScreen(),
       transition: Transition.cupertino,
     ),
-    GetPage(
-      name: adminLoginRoute,
-      page: () => const AdminLoginScreen(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: adminRegisterRoute,
-      page: () => const AdminRegisterScreen(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: userLoginRoute,
-      page: () => const UserLoginScreen(),
-      transition: Transition.cupertino,
-    ),
+    // phone-entry
     GetPage(
       name: phoneEnterRoute,
       page: () => const PhoneEntryScreen(),
       transition: Transition.cupertino,
     ),
+    // otp-verification
     GetPage(
       name: otpVerificationRoute,
       page: () => OTPVerificationScreen(),
       transition: Transition.cupertino,
     ),
+    // layout
     GetPage(
       name: layout,
       page: () => const LayoutScreen(),
       transition: Transition.cupertino,
     ),
+    // admin
+    // admin-login
+    GetPage(
+      name: adminLoginRoute,
+      page: () => const AdminLoginScreen(),
+      transition: Transition.cupertino,
+    ),
+    // admin-register
+    GetPage(
+      name: adminRegisterRoute,
+      page: () => const AdminRegisterScreen(),
+      transition: Transition.cupertino,
+    ),
+    // admin-home
     GetPage(
       name: adminHomeRoute,
       page: () => const AdminHomeScreen(),
       transition: Transition.cupertino,
     ),
+    // admin-logs
+    GetPage(
+      name: adminLogsRoute,
+      page: () => const AdminLogsScreen(),
+      transition: Transition.cupertino,
+    ),
+    // admin-settings
+    GetPage(
+      name: adminSettingsRoute,
+      page: () => const AdminSettingsScreen(),
+      transition: Transition.cupertino,
+    ),
+    // manage-users
+    GetPage(
+      name: manageUsersRoute,
+      page: () => const ManageUsersScreen(),
+      transition: Transition.cupertino,
+    ),
+    // user
+    // user-login
+    GetPage(
+      name: userLoginRoute,
+      page: () => const UserLoginScreen(),
+      transition: Transition.cupertino,
+    ),
+    // user-home
     GetPage(
       name: userHomeRoute,
       page: () => const UserHomeScreen(),
+      transition: Transition.cupertino,
+    ),
+    // user-settings
+    GetPage(
+      name: userSettingsRoute,
+      page: () => const UserSettingsScreen(),
       transition: Transition.cupertino,
     ),
   ];

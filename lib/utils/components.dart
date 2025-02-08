@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:graduation_project/utils/colors.dart';
 
-void showProgressIndicator(BuildContext context) {
+Widget showProgressIndicator(BuildContext context) {
   AlertDialog dialog = const AlertDialog(
     backgroundColor: Colors.transparent,
     elevation: 0,
@@ -19,6 +19,7 @@ void showProgressIndicator(BuildContext context) {
     context: context,
     builder: (context) => dialog,
   );
+  return dialog;
 }
 
 Widget textFormComponent(
@@ -30,6 +31,9 @@ Widget textFormComponent(
     IconData? suffixIcon,
     required BuildContext context,
     required String hintText,
+    Function(String?)? onSaved,
+    TextStyle? style,
+    String labelText = "",
     bool isPassword = false}) {
   Size size = MediaQuery.of(context).size;
   return Container(
@@ -42,14 +46,16 @@ Widget textFormComponent(
     ),
     child: TextFormField(
       controller: controller,
-      style: Theme.of(context).textTheme.bodySmall,
+      style: Theme.of(context).textTheme.headlineSmall,
       obscureText: isPassword,
       keyboardType: keyboardType,
       onChanged: onChanged,
+      onSaved: onSaved,
       validator: validate,
       decoration: InputDecoration(
         prefixIcon: Icon(
           prefixIcon,
+          size: 24.0,
           color: Colors.black.withOpacity(.7),
         ),
         suffixIcon: isPassword
@@ -60,13 +66,16 @@ Widget textFormComponent(
               )
             : null,
         hintText: hintText,
+        hintStyle: style,
+        labelText: labelText,
       ),
     ),
   );
 }
 
-Widget buttonComponent(String string, BuildContext context, double width,
-    VoidCallback voidCallback) {
+Widget buttonComponent(
+    BuildContext context, double width, VoidCallback voidCallback,
+    {required Widget? child}) {
   Size size = MediaQuery.of(context).size;
   return GestureDetector(
     onTap: voidCallback,
@@ -78,13 +87,7 @@ Widget buttonComponent(String string, BuildContext context, double width,
         color: ColorManager.primarycolor,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        string,
-        style: Theme.of(context)
-            .textTheme
-            .bodyLarge!
-            .copyWith(color: ColorManager.white),
-      ),
+      child: child,
     ),
   );
 }

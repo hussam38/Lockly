@@ -18,29 +18,37 @@ class _LayoutScreenState extends State<LayoutScreen> {
   int currentIndex = 0;
   List<Widget> user_screens = [
     const UserHomeScreen(),
-    const UserSettings(),
+    const UserSettingsScreen(),
   ];
   List<Widget> admin_screens = [
     const AdminHomeScreen(),
     const AdminLogsScreen(),
     const AdminSettingsScreen(),
   ];
+  bool isAdmin = Constants.loginAs == 'admin';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Constants.loginAs == 'admin' || Constants.loginAs == ''
-            ? admin_screens[currentIndex]
-            : user_screens[currentIndex],
+        child:
+            isAdmin ? admin_screens[currentIndex] : user_screens[currentIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt), label: 'Logs'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: 'Settings'),
-        ],
+        items: isAdmin
+            ? const [
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.home_filled), label: 'Home'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.list_alt), label: 'Logs'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.settings), label: 'Settings'),
+              ]
+            : const [
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.home_filled), label: 'Home'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.settings), label: 'Settings'),
+              ],
         currentIndex: currentIndex,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: ColorManager.primarycolor,

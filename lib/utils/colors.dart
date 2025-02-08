@@ -12,6 +12,7 @@ class ColorManager {
   static Color error = const Color(0xffe61f34);
   static Color black = const Color(0xff000000);
   static Color greyShade = const Color(0xff1e1e1e);
-  static Color tabColor = const Color(0xff3A3F47);
+  static Color tabColor = const Color.fromARGB(255, 177, 174, 174);
   static Color transparent = Colors.transparent;
+  static Color grey3 = Colors.grey[400] as Color;
 }
