@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/model/user_model.dart';
 import 'package:graduation_project/services/helpers.dart';
 import 'package:graduation_project/utils/components.dart';
 
 import '../../utils/colors.dart';
 
 class AddUserBottomSheet extends StatefulWidget {
-  const AddUserBottomSheet({super.key});
+  const AddUserBottomSheet({super.key, required this.onAddUser});
+  final Function(UserModel) onAddUser;
 
   @override
   _AddUserBottomSheetState createState() => _AddUserBottomSheetState();
@@ -20,6 +22,8 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
+
+  String? _objectError;
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +115,7 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
               const Text('Select Objects'),
               Wrap(
                 spacing: 8.0,
-                children: ['Object 1', 'Object 2', 'Object 3'].map((object) {
+                children: ['door1', 'door2', 'door3'].map((object) {
                   return FilterChip(
                     label: Text(object),
                     selected: _selectedObjects.contains(object),
@@ -127,16 +131,39 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
                   );
                 }).toList(),
               ),
+              if (_objectError != null)
+                Padding(
+                  padding: EdgeInsets.only(top: 8.0.h),
+                  child: Text(
+                    _objectError!,
+                    style: TextStyle(color: Colors.red, fontSize: 12.0.sp),
+                  ),
+                ),
               SizedBox(height: 16.0.h),
               // button
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+                    if (_selectedObjects.isEmpty) {
+                      setState(() {
+                        _objectError = "Please select at least one object";
+                      });
+                      return;
+                    }
                     setState(() {
                       isLoading = true;
+                      _objectError = null;
                     });
                     await Future.delayed(const Duration(seconds: 1));
                     _formKey.currentState!.save();
+                    UserModel newUser = UserModel(
+                      id: DateTime.now().millisecondsSinceEpoch,
+                      name: nameController.text,
+                      email: emailController.text,
+                      password: passwordController.text,
+                      accessibleObjects: _selectedObjects,
+                    );
+                    widget.onAddUser(newUser);
                     Get.back();
                   }
                 },

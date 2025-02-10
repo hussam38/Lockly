@@ -6,6 +6,8 @@ import 'package:graduation_project/view/admin/admin_home.dart';
 import 'package:graduation_project/view/admin/admin_login.dart';
 import 'package:graduation_project/view/admin/admin_register.dart';
 import 'package:graduation_project/view/admin/admin_settings.dart';
+import 'package:graduation_project/view/admin/edit_user_screen.dart';
+import 'package:graduation_project/view/admin/group_user_screen.dart';
 import 'package:graduation_project/view/admin/manage_users_screen.dart';
 import 'package:graduation_project/view/user/user_home.dart';
 import 'package:graduation_project/view/user/user_login.dart';
@@ -29,6 +31,8 @@ class AppRouter {
   static const String adminLogsRoute = '/admin-logs';
   static const String adminSettingsRoute = '/admin-settings';
   static const String manageUsersRoute = '/manage-users';
+  static const String editUserRoute = "/edit-user";
+  static const String groupUsersRoute = '/group-users';
   // user routes
   static const String userLoginRoute = '/user-login';
   static const String userHomeRoute = '/user-home';
@@ -103,6 +107,17 @@ class AppRouter {
       page: () => const ManageUsersScreen(),
       transition: Transition.cupertino,
     ),
+    // edit-user
+    GetPage(
+      name: editUserRoute,
+      page: () => const EditUserScreen(),
+      transition: Transition.cupertino,
+    ),
+    // group-users
+    GetPage(
+        name: groupUsersRoute,
+        page: () => const GroupUsersScreen(),
+        transition: Transition.cupertino),
     // user
     // user-login
     GetPage(

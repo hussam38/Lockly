@@ -33,14 +33,17 @@ Widget textFormComponent(
     required String hintText,
     Function(String?)? onSaved,
     TextStyle? style,
+    double? width,
+    double? height,
     String labelText = "",
+    EdgeInsetsGeometry? padding,
     bool isPassword = false}) {
   Size size = MediaQuery.of(context).size;
   return Container(
-    height: size.width / 7,
-    width: size.width / 1.22,
+    height: height ?? size.width / 7,
+    width: width ?? size.width / 1.22,
     alignment: Alignment.center,
-    padding: EdgeInsets.only(right: size.width / 30),
+    padding: padding ?? EdgeInsets.only(right: size.width / 30),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(10),
     ),

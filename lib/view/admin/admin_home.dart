@@ -156,7 +156,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                                         ),
                                         SizedBox(height: 10.h),
                                         Text(
-                                          'Door',
+                                          'Door ${i + 1}',
                                           style: Theme.of(context)
                                               .textTheme
                                               .displaySmall,

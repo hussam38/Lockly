@@ -37,3 +37,7 @@ extension NonNullBoolean on bool?{
     }
   }
 }
+
+extension MapUtils<K, V> on Iterable<MapEntry<K, V>> {
+  Map<K, V> toMap() => Map.fromEntries(this);
+}

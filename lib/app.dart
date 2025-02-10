@@ -6,6 +6,8 @@ import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/themes.dart';
 // import 'package:graduation_project/view/admin/admin_home.dart';
 // import 'package:graduation_project/view/admin/admin_settings.dart';
+// import 'package:graduation_project/view/admin/admin_home.dart';
+// import 'package:graduation_project/view/admin/admin_settings.dart';
 
 class LocklyApp extends StatefulWidget {
   const LocklyApp({super.key});
@@ -17,8 +19,9 @@ class LocklyApp extends StatefulWidget {
 class _LocklyAppState extends State<LocklyApp> {
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return ScreenUtilInit(
-      designSize: const Size(360, 800),
+      designSize: Size(size.width, size.height),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (_, child) {
@@ -28,7 +31,6 @@ class _LocklyAppState extends State<LocklyApp> {
           debugShowCheckedModeBanner: false,
           initialRoute: AppRouter.initRoute,
           getPages: AppRouter.routes,
-          // home: const AdminHomeScreen(),
         );
       },
     );
