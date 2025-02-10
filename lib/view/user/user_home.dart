@@ -144,7 +144,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                         ),
                                         SizedBox(height: 10.h),
                                         Text(
-                                          'Door',
+                                          'Door ${i + 1}',
                                           style: Theme.of(context)
                                               .textTheme
                                               .displaySmall,
@@ -241,7 +241,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         elevation: 10.0,
         color: ColorManager.white,
         child: Padding(
-          padding:  EdgeInsets.all(8.0.w),
+          padding: EdgeInsets.all(8.0.w),
           child: Row(
             children: [
               Expanded(
