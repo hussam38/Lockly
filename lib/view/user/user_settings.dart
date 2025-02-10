@@ -73,16 +73,16 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
             ),
             child: Column(
               children: [
-                ListTile(
-                  leading:
-                      const Icon(Icons.lock, color: ColorManager.primarycolor),
-                  title: Text(
-                    'Edit Information',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {},
-                ),
+                // ListTile(
+                //   leading:
+                //       const Icon(Icons.lock, color: ColorManager.primarycolor),
+                //   title: Text(
+                //     'Edit Information',
+                //     style: Theme.of(context).textTheme.bodyLarge,
+                //   ),
+                //   trailing: const Icon(Icons.arrow_forward_ios),
+                //   onTap: () {},
+                // ),
                 const Divider(),
                 SwitchListTile(
                   title: Text(
