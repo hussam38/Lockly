@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:graduation_project/utils/colors.dart';
 
+import 'values_manager.dart';
+
 Widget showProgressIndicator(BuildContext context) {
   AlertDialog dialog = const AlertDialog(
     backgroundColor: Colors.transparent,
@@ -14,7 +16,7 @@ Widget showProgressIndicator(BuildContext context) {
   );
 
   showDialog(
-    barrierColor: Colors.white.withOpacity(0),
+    barrierColor: Colors.white,
     barrierDismissible: false,
     context: context,
     builder: (context) => dialog,
@@ -41,7 +43,6 @@ Widget textFormComponent(
   Size size = MediaQuery.of(context).size;
   return Container(
     height: height ?? size.width / 7,
-    width: width ?? size.width / 1.22,
     alignment: Alignment.center,
     padding: padding ?? EdgeInsets.only(right: size.width / 30),
     decoration: BoxDecoration(
@@ -59,7 +60,7 @@ Widget textFormComponent(
         prefixIcon: Icon(
           prefixIcon,
           size: 24.0,
-          color: Colors.black.withOpacity(.7),
+          color: Colors.black,
         ),
         suffixIcon: isPassword
             ? IconButton(
@@ -84,11 +85,32 @@ Widget buttonComponent(
     onTap: voidCallback,
     child: Container(
       height: size.width / 8.h,
-      width: size.width / width.w,
+      width: size.width,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: ColorManager.primarycolor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: child,
+    ),
+  );
+}
+
+Widget buttonComponent2({
+  required Widget child,
+  required void Function()? onPressed,
+}) {
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: AppPadding.p30.w),
+    width: double.infinity,
+    height: AppSize.s50.h,
+    child: MaterialButton(
+      onPressed: onPressed,
+      color: ColorManager.primarycolor,
+      highlightColor: ColorManager.primarycolor,
+      clipBehavior: Clip.antiAliasWithSaveLayer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSize.s10.w),       
       ),
       child: child,
     ),

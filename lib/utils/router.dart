@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:graduation_project/shared/bindings/admin_bindings.dart';
 import 'package:graduation_project/shared/screens/layout_screen.dart';
 import 'package:graduation_project/shared/screens/role_selection_screen.dart';
 import 'package:graduation_project/shared/screens/splash_screen.dart';
@@ -6,9 +7,10 @@ import 'package:graduation_project/view/admin/admin_home.dart';
 import 'package:graduation_project/view/admin/admin_login.dart';
 import 'package:graduation_project/view/admin/admin_register.dart';
 import 'package:graduation_project/view/admin/admin_settings.dart';
-import 'package:graduation_project/view/admin/edit_user_screen.dart';
+import 'package:graduation_project/view/admin/edit_admin_screen.dart';
 import 'package:graduation_project/view/admin/group_user_screen.dart';
 import 'package:graduation_project/view/admin/manage_users_screen.dart';
+import 'package:graduation_project/view/user/edit_user_screen.dart';
 import 'package:graduation_project/view/user/user_home.dart';
 import 'package:graduation_project/view/user/user_login.dart';
 import 'package:graduation_project/view/user/user_settings.dart';
@@ -31,12 +33,13 @@ class AppRouter {
   static const String adminLogsRoute = '/admin-logs';
   static const String adminSettingsRoute = '/admin-settings';
   static const String manageUsersRoute = '/manage-users';
-  static const String editUserRoute = "/edit-user";
+  static const String editAdminRoute = "/edit-admin";
   static const String groupUsersRoute = '/group-users';
   // user routes
   static const String userLoginRoute = '/user-login';
   static const String userHomeRoute = '/user-home';
   static const String userSettingsRoute = '/user-settings';
+  static const String editUserRoute = "/edit-user";
 
   static final List<GetPage> routes = [
     // splash
@@ -49,7 +52,7 @@ class AppRouter {
     // role-selection
     GetPage(
       name: roleSelectionRoute,
-      page: () => const RoleSelectionScreen(),
+      page: () => RoleSelectionScreen(),
       transition: Transition.cupertino,
     ),
     // phone-entry
@@ -87,6 +90,7 @@ class AppRouter {
     GetPage(
       name: adminHomeRoute,
       page: () => const AdminHomeScreen(),
+      binding: AdminBindings(),
       transition: Transition.cupertino,
     ),
     // admin-logs
@@ -107,10 +111,10 @@ class AppRouter {
       page: () => const ManageUsersScreen(),
       transition: Transition.cupertino,
     ),
-    // edit-user
+    // edit-admin
     GetPage(
-      name: editUserRoute,
-      page: () => const EditUserScreen(),
+      name: editAdminRoute,
+      page: () => const EditAdminScreen(),
       transition: Transition.cupertino,
     ),
     // group-users
@@ -135,6 +139,12 @@ class AppRouter {
     GetPage(
       name: userSettingsRoute,
       page: () => const UserSettingsScreen(),
+      transition: Transition.cupertino,
+    ),
+    // edit-user
+    GetPage(
+      name: editUserRoute,
+      page: () => const EditUserScreen(),
       transition: Transition.cupertino,
     ),
   ];

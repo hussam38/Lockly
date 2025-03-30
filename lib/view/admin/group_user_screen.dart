@@ -62,7 +62,7 @@ class _GroupUsersScreenState extends State<GroupUsersScreen> {
     setState(() {
       // Remove the user only from the specific group
       if (groupedUsers.containsKey(groupKey)) {
-        groupedUsers[groupKey]?.removeWhere((user) => user.id == userId);
+        groupedUsers[groupKey]?.removeWhere((user) => user.uid == userId);
 
         // Remove the group if it's now empty
         if (groupedUsers[groupKey]?.isEmpty ?? false) {
@@ -72,7 +72,7 @@ class _GroupUsersScreenState extends State<GroupUsersScreen> {
 
       // Update the filtered list without affecting other groups
       for (var user in filteredUsers) {
-        if (user.id == userId) {
+        if (user.uid == userId) {
           user.accessibleObjects.remove(groupKey);
         }
       }
@@ -194,7 +194,7 @@ class _GroupUsersScreenState extends State<GroupUsersScreen> {
                                 color: Colors.red,
                               ),
                               onPressed: () {
-                                _deleteUser(user.id, object);
+                                _deleteUser(user.uid as int, object);
                               },
                             ),
                           ),

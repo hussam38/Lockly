@@ -19,53 +19,66 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   List<UserModel> filteredUsers = [];
   List<UserModel> usermodel = [
     UserModel(
-      id: 1,
+      uid: 1.toString(),
       name: "Hussam",
       email: "Hussam@gmail.com",
       password: "123456",
       accessibleObjects: ["door1", "door2", "door3"],
+            role: 'user'
+
     ),
     UserModel(
-      id: 2,
+      uid: 2.toString(),
       name: "Bedo",
       email: "Bedo@gmail.com",
       password: "123456",
       accessibleObjects: ["door1", "door2"],
+            role: 'user'
+
     ),
     UserModel(
-      id: 3,
+      uid: 3.toString(),
       name: "Gemy",
       email: "Gemy@gmail.com",
       password: "123456",
       accessibleObjects: ["door3"],
+            role: 'user'
+
     ),
     UserModel(
-      id: 4,
+      uid: 4.toString(),
       name: "Della",
       email: "Della@gmail.com",
       password: "123456",
       accessibleObjects: ["door1", "door3"],
+            role: 'user'
+
     ),
     UserModel(
-      id: 5,
+      uid: 5.toString(),
       name: "Diaa",
       email: "Diaa@gmail.com",
       password: "123456",
       accessibleObjects: ["door2", "door3"],
+            role: 'user'
+
     ),
     UserModel(
-      id: 6,
+      uid: 6.toString(),
       name: "Mahmoud",
       email: "Mahmoud@gmail.com",
       password: "123456",
       accessibleObjects: ["door1"],
+            role: 'user'
+
     ),
     UserModel(
-      id: 7,
+      uid: 7.toString(),
       name: "omar",
       email: "omar@gmail.com",
       password: "123456",
       accessibleObjects: ["door2"],
+      role: 'user'
     ),
   ];
 
@@ -94,7 +107,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   }
 
   void _deleteUser(int id) {
-    usermodel.removeWhere((user) => user.id == id);
+    usermodel.removeWhere((user) => user.uid == id);
     _filterUsers();
   }
 
@@ -196,7 +209,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                                 color: Colors.red,
                               ),
                               onPressed: () {
-                                _deleteUser(filteredUsers[index].id);
+                                _deleteUser(filteredUsers[index].uid as int);
                               },
                             ),
                           ],

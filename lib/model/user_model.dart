@@ -4,9 +4,10 @@ class UserModel {
   String email;
   String password;
   int? phone;
-  int id;
+  String uid;
   List<String> accessibleObjects;
   int? groupId;
+  String? role;
 
   UserModel(
       {this.image,
@@ -14,8 +15,9 @@ class UserModel {
       required this.email,
       required this.password,
       this.phone,
-      required this.id,
+      required this.uid,
       required this.accessibleObjects,
+      required this.role,
       this.groupId});
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -25,7 +27,8 @@ class UserModel {
         email: map['email'] as String,
         password: map['password'] as String,
         phone: map['phone'] as int?,
-        id: map['id'] as int,
+        uid: map['uid'] as String,
+        role: map['role'] as String,
         accessibleObjects: List<String>.from(map['accessibleObjects'] ?? []),
         groupId: map['groupId'] as int?);
   }
@@ -37,7 +40,8 @@ class UserModel {
       'email': email,
       'password': password,
       'phone': phone,
-      'id': id,
+      'id': uid,
+      'role': role,
       'accessibleObjects': accessibleObjects,
       'groupId': groupId
     };
@@ -49,7 +53,8 @@ class UserModel {
       String? email,
       String? password,
       int? phone,
-      int? id,
+      String? uid,
+      String? role,
       List<String>? accessibleObjects,
       int? groupId}) {
     return UserModel(
@@ -58,7 +63,8 @@ class UserModel {
         email: email ?? this.email,
         password: password ?? this.password,
         phone: phone ?? this.phone,
-        id: id ?? this.id,
+        uid: uid ?? this.uid,
+        role: role ?? this.role,
         accessibleObjects: accessibleObjects ?? this.accessibleObjects,
         groupId: groupId ?? this.groupId);
   }
@@ -72,7 +78,8 @@ class UserModel {
         other.email == email &&
         other.password == password &&
         other.phone == phone &&
-        other.id == id &&
+        other.uid == uid &&
+        other.role == role &&
         other.accessibleObjects == accessibleObjects &&
         other.groupId == groupId;
   }
@@ -84,12 +91,13 @@ class UserModel {
       email.hashCode ^
       password.hashCode ^
       phone.hashCode ^
-      id.hashCode ^
+      uid.hashCode ^
+      role.hashCode ^
       accessibleObjects.hashCode ^
       groupId.hashCode;
 
   @override
   String toString() {
-    return 'UserModel(image: $image, name: $name, email: $email, password: $password, phone: $phone, id: $id, accessibleObjects: $accessibleObjects, groupId: $groupId)';
+    return 'UserModel(image: $image, name: $name, email: $email, password: $password, phone: $phone, uid: $uid, accessibleObjects: $accessibleObjects, groupId: $groupId, role: $role)';
   }
 }

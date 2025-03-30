@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/auth_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/values_manager.dart';
@@ -21,7 +24,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
   TextEditingController nameController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
   final formKey = GlobalKey<FormState>();
-  bool isLoading = false;
+  final AuthController authController = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {
@@ -134,32 +137,36 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                       },
                     ),
                   ),
-                  Center(
-                    child: buttonComponent(
-                      child: !isLoading
-                          ? Text(
-                              "Sign Up",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge!
-                                  .copyWith(color: ColorManager.white),
-                            )
-                          : CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  ColorManager.white),
-                            ),
-                      context,
-                      2,
-                      () {
-                        if (formKey.currentState!.validate()) {
-                          setState(() {
-                            isLoading = true;
-                          });
-                          Future.delayed(const Duration(seconds: 1)).then(
-                              (value) =>
-                                  Get.toNamed(AppRouter.adminLoginRoute));
-                        }
-                      },
+                  Obx(
+                    () => Center(
+                      child: buttonComponent2(
+                        child: !authController.isLoading.value
+                            ? Text(
+                                'Sign Up',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium!
+                                    .copyWith(
+                                        color: ColorManager.white,
+                                        fontSize: 20.0.w),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(
+                                  color: ColorManager.white,
+                                ),
+                              ),
+                        onPressed: () async{                          
+                          if (formKey.currentState!.validate()) {
+                            await authController.registerAdmin(
+                              email: emailController.text.trim(),
+                              name: nameController.text.trim(),
+                              password: passwordController.text.trim(),
+                              phone: phoneController.text.trim(),
+                            );
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ],

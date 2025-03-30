@@ -6,14 +6,14 @@ import 'package:get/get.dart';
 import 'package:graduation_project/services/helpers.dart';
 import 'package:image_picker/image_picker.dart';
 
-class EditUserScreen extends StatefulWidget {
-  const EditUserScreen({super.key});
+class EditAdminScreen extends StatefulWidget {
+  const EditAdminScreen({super.key});
 
   @override
-  _EditUserScreenState createState() => _EditUserScreenState();
+  _EditAdminScreenState createState() => _EditAdminScreenState();
 }
 
-class _EditUserScreenState extends State<EditUserScreen> {
+class _EditAdminScreenState extends State<EditAdminScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();

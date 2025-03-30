@@ -16,7 +16,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   Future startDelay() async {
     return await Future.delayed(const Duration(seconds: 1))
-        .then((value) => Get.offAllNamed(AppRouter.roleSelectionRoute));
+        .then((value) => Get.offNamed(AppRouter.roleSelectionRoute));
   }
 
   @override

@@ -84,7 +84,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
-                      Get.toNamed(AppRouter.editUserRoute);
+                      Get.toNamed(AppRouter.editAdminRoute);
                     },
                   ),
                   const Divider(),

@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 
+import '../../controller/admin_controller.dart';
+
 class AdminBindings extends Bindings {
   @override
   void dependencies() {
-    // TODO: implement dependencies
+    Get.lazyPut(() => AdminController(), fenix: true);
   }
 }

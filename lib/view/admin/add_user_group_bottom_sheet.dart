@@ -140,12 +140,12 @@ class _AddUserToGroupBottomSheetState extends State<AddUserToGroupBottomSheet> {
                                       builder: (context) => MultiSelectDialog(
                                         items: availableDoors,
                                         initialSelectedItems:
-                                            selectedGroups[user.id] ?? [],
+                                            selectedGroups[user.uid] ?? [],
                                       ),
                                     );
                                     if (selectedDoors != null) {
                                       setState(() {
-                                        selectedGroups[user.id] = selectedDoors;
+                                        // selectedGroups[user.uid] = selectedDoors;
                                       });
                                     }
                                   },
@@ -153,7 +153,7 @@ class _AddUserToGroupBottomSheetState extends State<AddUserToGroupBottomSheet> {
                               ),
                               Wrap(
                                 children:
-                                    (selectedGroups[user.id] ?? []).map((door) {
+                                    (selectedGroups[user.uid] ?? []).map((door) {
                                   return Padding(
                                     padding: EdgeInsets.all(5.0.w),
                                     child: Chip(
@@ -165,7 +165,7 @@ class _AddUserToGroupBottomSheetState extends State<AddUserToGroupBottomSheet> {
                                       ),
                                       onDeleted: () {
                                         setState(() {
-                                          selectedGroups[user.id]?.remove(door);
+                                          selectedGroups[user.uid]?.remove(door);
                                         });
                                       },
                                     ),
@@ -186,7 +186,7 @@ class _AddUserToGroupBottomSheetState extends State<AddUserToGroupBottomSheet> {
                     selectedGroups.forEach((userId, groups) {
                       if (groups.isNotEmpty) {
                         UserModel user = widget.allUsers
-                            .firstWhere((user) => user.id == userId);
+                            .firstWhere((user) => user.uid == userId);
                         widget.onAddUser(user, groups);
                       }
                     });

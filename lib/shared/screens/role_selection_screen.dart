@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/auth_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
-import 'package:graduation_project/utils/constants.dart';
 import 'package:graduation_project/utils/font_manager.dart';
 import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/values_manager.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
-  const RoleSelectionScreen({super.key});
+  RoleSelectionScreen({super.key});
+
+  final AuthController authController = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,7 @@ class RoleSelectionScreen extends StatelessWidget {
               color: ColorManager.primarycolor,
               icon: Icons.admin_panel_settings,
               onTap: () {
-                Constants.loginAs = "admin";
+                authController.loginRole('admin');
                 Get.offNamed(AppRouter.adminLoginRoute);
               },
             ),
@@ -45,7 +47,7 @@ class RoleSelectionScreen extends StatelessWidget {
               color: ColorManager.green,
               icon: Icons.person,
               onTap: () {
-                Constants.loginAs = "user";
+                authController.loginRole('user');
                 Get.offNamed(AppRouter.userLoginRoute);
               },
             ),

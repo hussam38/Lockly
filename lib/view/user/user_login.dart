@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/auth_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/components.dart';
 import 'package:graduation_project/utils/router.dart';
@@ -19,7 +20,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
-  bool isLoading = false;
+  final AuthController authController = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {
@@ -95,32 +96,32 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                       },
                     ),
                   ),
-                  Center(
-                    child: buttonComponent(
-                      child: !isLoading
-                          ? Text(
-                              "Sign In",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge!
-                                  .copyWith(color: ColorManager.white),
-                            )
-                          : CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  ColorManager.white),
-                            ),
-                      context,
-                      2,
-                      () {
-                        if (formKey.currentState!.validate()) {
-                          setState(() {
-                            isLoading = true;
-                          });
-                          Future.delayed(const Duration(seconds: 1)).then(
-                              (value) =>
-                                  Get.toNamed(AppRouter.phoneEnterRoute));
-                        }
-                      },
+                  Obx(
+                    () => Center(
+                      child: buttonComponent2(
+                        child: !authController.isLoading.value
+                            ? Text(
+                                'Sign In',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium!
+                                    .copyWith(
+                                        color: ColorManager.white,
+                                        fontSize: 20.0.w),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(
+                                  color: ColorManager.white,
+                                ),
+                              ),
+                        onPressed: () async{                          
+                          if (formKey.currentState!.validate()) {
+                            await authController.loginUser(
+                                emailController.text, passwordController.text);
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ],
