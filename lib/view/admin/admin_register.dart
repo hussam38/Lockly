@@ -1,11 +1,9 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/controller/auth_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
-import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/values_manager.dart';
 
 import '../../services/helpers.dart';
@@ -158,7 +156,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                               ),
                         onPressed: () async{                          
                           if (formKey.currentState!.validate()) {
-                            await authController.registerAdmin(
+                            await authController.registerUser(
                               email: emailController.text.trim(),
                               name: nameController.text.trim(),
                               password: passwordController.text.trim(),

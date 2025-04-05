@@ -27,11 +27,11 @@ class _LocklyAppState extends State<LocklyApp> {
       splitScreenMode: true,
       builder: (_, child) {
         return GetMaterialApp(
+          initialBinding: AppBindings(),
           theme: whiteTheme(),
           locale: const Locale('en', 'US'),
           debugShowCheckedModeBanner: false,
           initialRoute: AppRouter.initRoute,
-          initialBinding: AppBindings(),
           getPages: AppRouter.routes,
         );
       },

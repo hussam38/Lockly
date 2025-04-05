@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/admin_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/router.dart';
 
@@ -14,6 +15,7 @@ class AdminSettingsScreen extends StatefulWidget {
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool isDarkTheme = false;
   bool isNotificationsEnabled = true;
+  final AdminController adminController = Get.find<AdminController>();
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +104,20 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     },
                   ),
                   const Divider(),
+                  // manage devices
+                  ListTile(
+                    leading: const Icon(Icons.devices,
+                        color: ColorManager.primarycolor),
+                    title: Text(
+                      'Manage Devices',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      Get.toNamed(AppRouter.manageDevicesRoute);
+                    },
+                  ),
+                  const Divider(),
                   // dark theme
                   SwitchListTile(
                     title: Text(
@@ -141,7 +157,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
-                      Get.offAllNamed(AppRouter.roleSelectionRoute);
+                      adminController.logout();
+                      Get.offNamed(AppRouter.roleSelectionRoute);
                     },
                   ),
                 ],

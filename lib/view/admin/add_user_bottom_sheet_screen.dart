@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/controller/admin_controller.dart';
-import 'package:graduation_project/model/user_model.dart';
 import 'package:graduation_project/services/helpers.dart';
 import 'package:graduation_project/utils/components.dart';
 
-import '../../utils/colors.dart';
 
 class AddUserBottomSheet extends StatefulWidget {
-  const AddUserBottomSheet({super.key, required this.onAddUser});
-  final Function(UserModel) onAddUser;
+  const AddUserBottomSheet({super.key});
 
   @override
   _AddUserBottomSheetState createState() => _AddUserBottomSheetState();
@@ -22,6 +19,23 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   final AdminController adminController = Get.find<AdminController>();
+
+  @override
+  void initState() {
+    super.initState();
+    if (adminController.isObjectsLoaded.value) {
+      adminController.fetchObjects();
+      adminController.isObjectsLoaded.value = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    adminController.selectedObjects.clear();
+    super.dispose();
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -113,16 +127,16 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
               const Text('Select Objects'),
               Obx(() => Wrap(
                     spacing: 8.0,
-                    children: ['door1', 'door2', 'door3'].map((object) {
+                    children: adminController.allObjects.map((object) {
                       return FilterChip(
                         label: Text(object),
                         selected:
-                            adminController.selectedDoors.contains(object),
+                            adminController.selectedObjects.contains(object),
                         onSelected: (bool selected) {
                           if (selected) {
-                            adminController.selectedDoors.add(object);
+                            adminController.selectedObjects.add(object);
                           } else {
-                            adminController.selectedDoors.remove(object);
+                            adminController.selectedObjects.remove(object);
                           }
                         },
                       );
@@ -133,7 +147,7 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
               Obx(() => ElevatedButton(
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        if (adminController.selectedDoors.isEmpty) {
+                        if (adminController.selectedObjects.isEmpty) {
                           Get.snackbar(
                               "Error", "Please select at least one door",
                               backgroundColor: Colors.red,
@@ -144,7 +158,7 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
                           name: nameController.text.trim(),
                           email: emailController.text.trim(),
                           password: passwordController.text.trim(),
-                          doors: adminController.selectedDoors.toList(),
+                          doors: adminController.selectedObjects.toList(),
                         );
                       }
                     },

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/font_manager.dart';
-import 'package:graduation_project/utils/router.dart';
+
+import '../../controller/auth_controller.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,15 +15,17 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  late AuthController _authController;
   Future startDelay() async {
-    return await Future.delayed(const Duration(seconds: 1))
-        .then((value) => Get.offNamed(AppRouter.roleSelectionRoute));
+    await Future.delayed(const Duration(seconds: 1));
+    _authController = Get.find<AuthController>();
+    _authController.checkUserStatus();
   }
 
   @override
   void initState() {
-    startDelay();
     super.initState();
+    startDelay();
   }
 
   @override

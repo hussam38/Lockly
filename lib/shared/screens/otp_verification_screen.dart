@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../utils/colors.dart';
 import '../../utils/font_manager.dart';
-import '../../utils/router.dart';
 import '../../utils/strings_manager.dart';
 import '../../utils/values_manager.dart';
 
@@ -94,8 +93,8 @@ class OTPVerificationScreen extends StatelessWidget {
         fieldHeight: 50,
         fieldWidth: 40,
         activeFillColor: Colors.white,
-        selectedFillColor: Colors.blue.withOpacity(.1),
-        inactiveFillColor: Colors.blueAccent.withOpacity(.1),
+        selectedFillColor: Colors.blue,
+        inactiveFillColor: Colors.blueAccent,
         activeColor: Colors.blue,
         inactiveColor: Colors.black,
       ),
@@ -112,6 +111,6 @@ class OTPVerificationScreen extends StatelessWidget {
   }
 
   void onTap() {
-    Get.offAllNamed(AppRouter.layout);
+    // Get.offAllNamed(AppRouter.layout);
   }
 }

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/model/user_model.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/router.dart';
 
@@ -8,19 +10,30 @@ import '../services/prefs.dart';
 
 class AuthController extends GetxController {
   final SharedPrefsService _prefs = SharedPrefsService.instance;
+  SharedPrefsService get prefs => _prefs;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   Rx<User?> firebaseUser = Rx<User?>(null);
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  RxBool isLoggedIn = false.obs;
   RxBool isLoading = false.obs;
   RxString role = "".obs;
 
+  Future<void> checkUserStatus() async {
+    isLoading.value = true;
+    String userRole = _prefs.getString('role') ?? '';
+    if (userRole == 'admin') {
+      Get.offNamed(AppRouter.adminLayoutRoute);
+    } else if (userRole == 'user') {
+      Get.offNamed(AppRouter.userLayoutRoute);
+    } else {
+      Get.offNamed(AppRouter.roleSelectionRoute);
+    }
+    isLoading.value = false;
+  }
+
   void loginRole(String userRole) {
-    isLoggedIn.value = true;
     role.value = userRole;
-    _prefs.saveString("role", userRole);
   }
 
   // user login
@@ -31,7 +44,15 @@ class AuthController extends GetxController {
           email: email.trim(), password: password.trim());
       User? user = userCredential.user;
       if (user != null) {
-        Get.offNamed(AppRouter.layout);
+        if (role.value == 'admin') {
+          await _prefs.saveString('role', role.value);
+          await _prefs.saveString('uid', user.uid);
+          Get.offNamed(AppRouter.adminLayoutRoute);
+        } else {
+          await _prefs.saveString('role', role.value);
+          await _prefs.saveString('uid', user.uid);
+          Get.offNamed(AppRouter.userLayoutRoute);
+        }
       }
       Get.snackbar(
         "Success",
@@ -44,11 +65,13 @@ class AuthController extends GetxController {
       Get.snackbar("Login Failed", e.toString());
     } finally {
       isLoading.value = false;
+      debugPrint("User ID: ${_prefs.getString('uid') ?? 'UID not found'}");
+      debugPrint("User Role: ${_prefs.getString('role') ?? 'Role not found'}");
     }
   }
 
   // admin register
-  Future<void> registerAdmin({
+  Future<void> registerUser({
     required String name,
     required String email,
     required String phone,
@@ -59,13 +82,16 @@ class AuthController extends GetxController {
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password);
       String uid = userCredential.user!.uid;
-      await _firestore.collection("users").doc(uid).set({
-        "uid": uid,
-        "name": name,
-        "email": email,
-        "phone": '+2$phone',
-        "role": "admin",
-      });
+
+      UserModel user = UserModel(
+        name: name,
+        email: email,
+        phone: '+2$phone',
+        uid: uid,
+        accessibleObjects: [],
+        role: "admin",
+      );
+      await _firestore.collection("users").doc(uid).set(user.toMap());
 
       Get.offNamed(AppRouter.adminLoginRoute);
       Get.snackbar(
@@ -80,16 +106,6 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
-  }
-
-  void checkAuth() {
-    role.value = _prefs.getString("role") ?? "";
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-    checkAuth();
   }
 
   @override

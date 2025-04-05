@@ -2,8 +2,7 @@ class UserModel {
   String? image;
   String name;
   String email;
-  String password;
-  int? phone;
+  String? phone;
   String uid;
   List<String> accessibleObjects;
   int? groupId;
@@ -13,7 +12,6 @@ class UserModel {
       {this.image,
       required this.name,
       required this.email,
-      required this.password,
       this.phone,
       required this.uid,
       required this.accessibleObjects,
@@ -21,24 +19,25 @@ class UserModel {
       this.groupId});
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
-    return UserModel(
-        image: map['image'] as String?,
-        name: map['name'] as String,
-        email: map['email'] as String,
-        password: map['password'] as String,
-        phone: map['phone'] as int?,
-        uid: map['uid'] as String,
-        role: map['role'] as String,
-        accessibleObjects: List<String>.from(map['accessibleObjects'] ?? []),
-        groupId: map['groupId'] as int?);
-  }
+  return UserModel(
+    image: map['image'] as String?,
+    name: map['name'] as String? ?? 'Unknown',
+    email: map['email'] as String? ?? '',
+    phone: map['phone'] as String?,
+    uid: map['id'] as String? ?? '',
+    role: map['role'] as String? ?? 'user',
+    accessibleObjects: (map['accessibleObjects'] as List<dynamic>?)
+        ?.map((e) => e.toString())
+        .toList() ?? [], 
+    groupId: map['groupId'] as int?,
+  );
+}
 
   Map<String, dynamic> toMap() {
     return {
       'image': image,
       'name': name,
       'email': email,
-      'password': password,
       'phone': phone,
       'id': uid,
       'role': role,
@@ -52,7 +51,7 @@ class UserModel {
       String? name,
       String? email,
       String? password,
-      int? phone,
+      String? phone,
       String? uid,
       String? role,
       List<String>? accessibleObjects,
@@ -61,7 +60,6 @@ class UserModel {
         image: image ?? this.image,
         name: name ?? this.name,
         email: email ?? this.email,
-        password: password ?? this.password,
         phone: phone ?? this.phone,
         uid: uid ?? this.uid,
         role: role ?? this.role,
@@ -76,7 +74,6 @@ class UserModel {
         other.image == image &&
         other.name == name &&
         other.email == email &&
-        other.password == password &&
         other.phone == phone &&
         other.uid == uid &&
         other.role == role &&
@@ -89,7 +86,6 @@ class UserModel {
       image.hashCode ^
       name.hashCode ^
       email.hashCode ^
-      password.hashCode ^
       phone.hashCode ^
       uid.hashCode ^
       role.hashCode ^
@@ -98,6 +94,6 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(image: $image, name: $name, email: $email, password: $password, phone: $phone, uid: $uid, accessibleObjects: $accessibleObjects, groupId: $groupId, role: $role)';
+    return 'UserModel(image: $image, name: $name, email: $email, phone: $phone, uid: $uid, accessibleObjects: $accessibleObjects, groupId: $groupId, role: $role)';
   }
 }

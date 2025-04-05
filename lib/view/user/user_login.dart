@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:graduation_project/controller/auth_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/components.dart';
-import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/values_manager.dart';
 
 import '../../services/helpers.dart';

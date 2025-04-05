@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,19 +16,31 @@ class SharedPrefsService extends GetxService {
 
   // Save data
   Future<void> saveString(String key, String value) async {
-    await _prefs.setString(key, value);
+    try {
+      await _prefs.setString(key, value);
+    } catch (e) {
+      log('Error saving string: $e');
+    }
   }
 
   Future<void> saveBool(String key, bool value) async {
-    await _prefs.setBool(key, value);
+    try {
+      await _prefs.setBool(key, value);
+    } catch (e) {
+      log('Error saving bool: $e');
+    }
   }
 
   Future<void> saveInt(String key, int value) async {
-    await _prefs.setInt(key, value);
+    try {
+      await _prefs.setInt(key, value);
+    } catch (e) {
+      log('Error saving int: $e');
+    }
   }
 
   // Get data
-  String? getString(String key) => _prefs.getString(key) ;
+  String? getString(String key) => _prefs.getString(key);
 
   bool getBool(String key) => _prefs.getBool(key) ?? false;
 
@@ -34,11 +48,19 @@ class SharedPrefsService extends GetxService {
 
   // Remove data
   Future<void> remove(String key) async {
-    await _prefs.remove(key);
+    try {
+      await _prefs.remove(key);
+    } catch (e) {
+      log('Error removing key: $e');
+    }
   }
 
   // Clear all data
   Future<void> clear() async {
-    await _prefs.clear();
+    try {
+      await _prefs.clear();
+    } catch (e) {
+      log('Error clearing preferences: $e');
+    }
   }
 }
