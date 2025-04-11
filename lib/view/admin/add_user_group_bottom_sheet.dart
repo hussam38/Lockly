@@ -13,16 +13,16 @@ class AddUserToGroupBottomSheet extends StatelessWidget {
   // final Function(UserModel, List<String>) onAddUser;
   final List<String> allDoors;
 
-  const AddUserToGroupBottomSheet({
+   AddUserToGroupBottomSheet({
     super.key,
     required this.allUsers,
     // required this.onAddUser,
     required this.allDoors,
   });
+  final AdminController adminController = Get.find<AdminController>();
 
   @override
   Widget build(BuildContext context) {
-    final AdminController adminController = Get.find<AdminController>();
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.75,

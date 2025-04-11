@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
 
+  // mode -> (opened, closed)
+  //status -> (online, offline)
 class DeviceModel {
   final String id;
   final String name;
-  final List<String> assignedTo;
+  final List<Map<String, dynamic>> assignedTo;
   final String status;
+  final bool locked;
+  final int lockUntil;
   final String mode;
 
   DeviceModel({
@@ -12,6 +16,8 @@ class DeviceModel {
     required this.name,
     required this.assignedTo,
     required this.status,
+    this.locked = false,
+    this.lockUntil = 0,
     required this.mode,
   });
 
@@ -19,9 +25,9 @@ class DeviceModel {
     return DeviceModel(
       id: map['id'],
       name: map['name'] ?? '',
-      assignedTo: List<String>.from(map['assignedTo'] ?? []),
-      status: map['status'] ?? 'idle',
-      mode: map['mode'] ?? 'offline',
+      assignedTo: List<Map<String, dynamic>>.from(map['assignedTo'] ?? []),
+      status: map['status'] ?? 'offline',
+      mode: map['mode'] ?? 'closed',
     );
   }
 
@@ -32,15 +38,19 @@ class DeviceModel {
       'assignedTo': assignedTo,
       'status': status,
       'mode': mode,
+      'locked': locked,
+      'lockUntil': lockUntil,
     };
   }
 
   DeviceModel copyWith({
     String? id,
     String? name,
-    List<String>? assignedTo,
+    List<Map<String, dynamic>>? assignedTo,
     String? status,
     String? mode,
+    bool? locked,
+    int? lockUntil,
   }) {
     return DeviceModel(
       id: id ?? this.id,
@@ -48,6 +58,8 @@ class DeviceModel {
       assignedTo: assignedTo ?? this.assignedTo,
       status: status ?? this.status,
       mode: mode ?? this.mode,
+      locked: locked ?? this.locked,
+      lockUntil: lockUntil ?? this.lockUntil,
     );
   }
 
@@ -60,12 +72,14 @@ class DeviceModel {
         other.name == name &&
         listEquals(other.assignedTo, assignedTo) &&
         other.status == status &&
-        other.mode == mode;
+        other.mode == mode &&
+        other.locked == locked &&
+        other.lockUntil == lockUntil;
   }
 
   @override
   String toString() {
-    return 'DeviceModel{id: $id, name: $name, assignedTo: $assignedTo, status: $status, mode: $mode}';
+    return 'DeviceModel{id: $id, name: $name, assignedTo: $assignedTo, status: $status, mode: $mode, locked: $locked, lockUntil: $lockUntil}';
   }
 
   @override
@@ -74,5 +88,7 @@ class DeviceModel {
       name.hashCode ^
       assignedTo.hashCode ^
       status.hashCode ^
+      locked.hashCode ^
+      lockUntil.hashCode ^
       mode.hashCode;
 }

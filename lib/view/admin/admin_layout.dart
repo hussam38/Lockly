@@ -8,8 +8,6 @@ class AdminLayoutScreen extends StatelessWidget {
   AdminLayoutScreen({super.key});
   final AdminController adminController = Get.find<AdminController>();
 
-  
-
   @override
   Widget build(BuildContext context) {
     return Obx(() {

@@ -52,12 +52,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hussam Nasser',
+                            '${adminController.currentUser.value?.name}',
                             style: Theme.of(context).textTheme.labelMedium,
                           ),
                           SizedBox(height: 4.0.h),
                           Text(
-                            'Hussam@mail-server.com',
+                            '${adminController.currentUser.value?.email}',
                             style: Theme.of(context).textTheme.labelSmall,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -119,36 +119,37 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   ),
                   const Divider(),
                   // dark theme
-                  SwitchListTile(
-                    title: Text(
-                      'Dark Theme',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    value: isDarkTheme,
-                    onChanged: (bool value) {
-                      setState(() {
-                        isDarkTheme = value;
-                      });
-                    },
-                    secondary: const Icon(Icons.brightness_6,
-                        color: ColorManager.primarycolor),
-                  ),
-                  const Divider(),
-                  SwitchListTile(
-                    title: Text(
-                      'Enable Notifications',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    value: isNotificationsEnabled,
-                    onChanged: (bool value) {
-                      setState(() {
-                        isNotificationsEnabled = value;
-                      });
-                    },
-                    secondary: const Icon(Icons.notifications,
-                        color: ColorManager.primarycolor),
-                  ),
-                  const Divider(),
+                  // SwitchListTile(
+                  //   title: Text(
+                  //     'Dark Theme',
+                  //     style: Theme.of(context).textTheme.bodyLarge,
+                  //   ),
+                  //   value: isDarkTheme,
+                  //   onChanged: (bool value) {
+                  //     setState(() {
+                  //       isDarkTheme = value;
+                  //     });
+                  //   },
+                  //   secondary: const Icon(Icons.brightness_6,
+                  //       color: ColorManager.primarycolor),
+                  // ),
+                  // const Divider(),
+                  // notifications
+                  // SwitchListTile(
+                  //   title: Text(
+                  //     'Enable Notifications',
+                  //     style: Theme.of(context).textTheme.bodyLarge,
+                  //   ),
+                  //   value: isNotificationsEnabled,
+                  //   onChanged: (bool value) {
+                  //     setState(() {
+                  //       isNotificationsEnabled = value;
+                  //     });
+                  //   },
+                  //   secondary: const Icon(Icons.notifications,
+                  //       color: ColorManager.primarycolor),
+                  // ),
+                  // const Divider(),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.redAccent),
                     title: Text(

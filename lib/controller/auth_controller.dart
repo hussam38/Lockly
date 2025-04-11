@@ -1,5 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/model/user_model.dart';
@@ -11,10 +11,12 @@ import '../services/prefs.dart';
 class AuthController extends GetxController {
   final SharedPrefsService _prefs = SharedPrefsService.instance;
   SharedPrefsService get prefs => _prefs;
+  // final LogsController logsController = Get.find<LogsController>();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   Rx<User?> firebaseUser = Rx<User?>(null);
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseDatabase _database = FirebaseDatabase.instance;
 
   RxBool isLoading = false.obs;
   RxString role = "".obs;
@@ -43,24 +45,24 @@ class AuthController extends GetxController {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: email.trim(), password: password.trim());
       User? user = userCredential.user;
-      if (user != null) {
-        if (role.value == 'admin') {
-          await _prefs.saveString('role', role.value);
-          await _prefs.saveString('uid', user.uid);
-          Get.offNamed(AppRouter.adminLayoutRoute);
-        } else {
-          await _prefs.saveString('role', role.value);
-          await _prefs.saveString('uid', user.uid);
-          Get.offNamed(AppRouter.userLayoutRoute);
-        }
-      }
+      if (user == null) throw Exception("User not found after login.");
+
+      await _prefs.saveString('role', role.value);
+      await _prefs.saveString('uid', user.uid);
+      // await _firestore.collection('users').doc(user.uid).get();
+      await _database.ref('users/${user.uid}').get();
       Get.snackbar(
         "Success",
         "User logged in successfully",
-        backgroundColor: ColorManager.grey,
+        backgroundColor: ColorManager.green,
         colorText: ColorManager.white,
         snackPosition: SnackPosition.BOTTOM,
       );
+      final destination = role.value == 'admin'
+          ? AppRouter.adminLayoutRoute
+          : AppRouter.userLayoutRoute;
+
+      Get.offNamed(destination);
     } catch (e) {
       Get.snackbar("Login Failed", e.toString());
     } finally {
@@ -91,13 +93,16 @@ class AuthController extends GetxController {
         accessibleObjects: [],
         role: "admin",
       );
-      await _firestore.collection("users").doc(uid).set(user.toMap());
+      // await _firestore.collection("users").doc(uid).set(user.toMap());
+      // save to realtime database
+      await _database.ref("users/$uid").set(user.toMap());
+      loginRole('admin');
 
       Get.offNamed(AppRouter.adminLoginRoute);
       Get.snackbar(
         "Success",
         "Admin Registered Successfully",
-        backgroundColor: ColorManager.grey,
+        backgroundColor: ColorManager.green,
         colorText: ColorManager.white,
         snackPosition: SnackPosition.BOTTOM,
       );
