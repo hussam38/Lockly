@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:graduation_project/controller/user_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/values_manager.dart';
 import '../../utils/asset_manager.dart';
@@ -12,33 +14,7 @@ class UserHomeScreen extends StatefulWidget {
 }
 
 class _UserHomeScreenState extends State<UserHomeScreen> {
-  List<Map<String, dynamic>> deviceState = [];
-  Set<int> selectedItems = {};
-  bool isSelectionMode = false;
-
-  @override
-  void initState() {
-    super.initState();
-    deviceState = List.generate(
-      10,
-      (index) => {
-        'online': index < 7,
-        'value': false,
-      },
-    ).toList();
-  }
-
-  void _deleteSelectedItems() {
-    setState(() {
-      final sortedIndices = selectedItems.toList()
-        ..sort((a, b) => b.compareTo(a));
-      for (final index in sortedIndices) {
-        deviceState.removeAt(index);
-      }
-      selectedItems.clear();
-      isSelectionMode = false;
-    });
-  }
+  final UserController userController = Get.find<UserController>();
 
   @override
   Widget build(BuildContext context) {
@@ -51,185 +27,219 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           style: Theme.of(context).textTheme.displayMedium,
         ),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(8.0.w),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildFirstSection(),
-                SizedBox(height: 20.h),
-                Text(
-                  "Devices",
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                SizedBox(height: 20.h),
-                Visibility(
-                  visible: deviceState.isEmpty,
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.devices,
-                          size: 100,
-                          color: ColorManager.grey,
-                        ),
-                        SizedBox(height: 20.h),
-                        Text(
-                          "No devices available",
-                          style: Theme.of(context).textTheme.displayMedium,
-                        ),
-                      ],
+      body: Obx(() {
+        if (userController.isLoading.value) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+        return Padding(
+          padding: EdgeInsets.all(8.0.w),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildFirstSection(),
+                  SizedBox(height: 20.h),
+                  Text(
+                    "Devices",
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
+                  SizedBox(height: 20.h),
+                  Visibility(
+                    visible: userController.deviceState.isEmpty,
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.devices,
+                            size: 100,
+                            color: ColorManager.grey,
+                          ),
+                          SizedBox(height: 20.h),
+                          Text(
+                            "No devices available",
+                            style: Theme.of(context).textTheme.displayMedium,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Visibility(
-                  visible: deviceState.isNotEmpty,
-                  child: SizedBox(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 1.0,
-                        mainAxisSpacing: 1.0,
-                      ),
-                      itemCount: deviceState.length,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (ctx, i) {
-                        final device = deviceState[i];
-                        final isSelected = selectedItems.contains(i);
-                        return GestureDetector(
-                          onLongPress: () {
-                            setState(() {
-                              isSelectionMode = true;
-                              selectedItems.add(i);
-                            });
-                          },
-                          onTap: () {
-                            setState(() {
-                              if (isSelectionMode) {
-                                if (isSelected) {
-                                  selectedItems.remove(i);
-                                  if (selectedItems.isEmpty) {
-                                    isSelectionMode = false;
-                                  }
-                                } else {
-                                  selectedItems.add(i);
-                                }
-                              }
-                            });
-                          },
-                          child: Stack(
-                            children: [
-                              Card(
-                                elevation: 10.0,
-                                color: device['online']
-                                    ? ColorManager.white
-                                    : ColorManager.tabColor,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
+                  Visibility(
+                    visible: userController.deviceState.isNotEmpty,
+                    child: SizedBox(
+                      child: Obx(() {
+                        return GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 1.0,
+                            mainAxisSpacing: 1.0,
+                          ),
+                          itemCount: userController.deviceState.length,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (ctx, i) {
+                            final device = userController.deviceState[i];
+                            final isLocked = device.locked;
+
+                            return Obx(() {
+                              return GestureDetector(
+                                onLongPress: () {
+                                  userController.enableSelectionMode(i);
+                                },
+                                onTap: () {
+                                  userController.toggleDeviceSelection(i);
+                                },
+                                child: Stack(
                                   children: [
-                                    Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.door_back_door_rounded,
-                                          color: ColorManager.grey,
-                                          size: 45.w,
-                                        ),
-                                        SizedBox(height: 10.h),
-                                        Text(
-                                          'Door ${i + 1}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .displaySmall,
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 10.w),
-                                    Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          child: Switch(
-                                            value: device['value'],
-                                            activeColor:
-                                                ColorManager.primarycolor,
-                                            onChanged: device['online']
-                                                ? (bool value) {
-                                                    setState(() {
-                                                      device['value'] = value;
-                                                    });
-                                                  }
-                                                : null,
+                                    Card(
+                                      elevation: 10.0,
+                                      color: device.status == 'online'
+                                          ? ColorManager.white
+                                          : ColorManager.tabColor,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        children: [
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.door_back_door_rounded,
+                                                color: ColorManager.grey,
+                                                size: 45.w,
+                                              ),
+                                              SizedBox(height: 10.h),
+                                              Text(
+                                                device.name,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .displaySmall,
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                        Visibility(
-                                          visible: !device['online'],
-                                          child: Padding(
-                                            padding: EdgeInsets.only(
-                                                bottom: AppSize.s16.w),
-                                            child: Text(
-                                              'Offline',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium,
-                                            ),
+                                          SizedBox(height: 10.w),
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Expanded(
+                                                child: Switch(
+                                                  value:
+                                                      device.mode == 'opened',
+                                                  activeColor:
+                                                      ColorManager.primarycolor,
+                                                  onChanged: (device.status ==
+                                                              'online' &&
+                                                          !isLocked)
+                                                      ? (bool value) async {
+                                                          final newMode = value
+                                                              ? 'opened'
+                                                              : 'closed';
+                                                          await userController
+                                                              .updateDeviceMode(
+                                                                  device.id,
+                                                                  newMode);
+                                                          if (value) {
+                                                            await userController
+                                                                .lockDevice(
+                                                                    device.id,
+                                                                    30);
+                                                          }
+                                                        }
+                                                      : null,
+                                                ),
+                                              ),
+                                              Visibility(
+                                                visible: isLocked,
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(
+                                                      bottom: AppSize.s16.w),
+                                                  child: Text(
+                                                    'Locked',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium,
+                                                  ),
+                                                ),
+                                              ),
+                                              Visibility(
+                                                visible:
+                                                    device.status != 'online' &&
+                                                        !isLocked,
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(
+                                                      bottom: AppSize.s16.w),
+                                                  child: Text(
+                                                    'Offline',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium,
+                                                  ),
+                                                ),
+                                              )
+                                            ],
                                           ),
-                                        )
-                                      ],
+                                        ],
+                                      ),
                                     ),
+                                    if (userController.isSelectionMode.value)
+                                      Positioned(
+                                        top: 8.0,
+                                        right: 8.0,
+                                        child: CircleAvatar(
+                                          radius: 12.0,
+                                          backgroundColor: userController
+                                                  .selectedItems
+                                                  .contains(i)
+                                              ? Colors.red
+                                              : Colors.transparent,
+                                          child: userController.selectedItems
+                                                  .contains(i)
+                                              ? const Icon(
+                                                  Icons.check,
+                                                  size: 20.0,
+                                                  color: Colors.white,
+                                                )
+                                              : const Icon(
+                                                  Icons.circle_outlined,
+                                                  size: 20.0,
+                                                  color: Colors.blue,
+                                                ),
+                                        ),
+                                      ),
                                   ],
                                 ),
-                              ),
-                              if (isSelectionMode)
-                                Positioned(
-                                  top: 8.0,
-                                  right: 8.0,
-                                  child: CircleAvatar(
-                                    radius: 12.0,
-                                    backgroundColor: isSelected
-                                        ? Colors.red
-                                        : Colors.transparent,
-                                    child: isSelected
-                                        ? const Icon(
-                                            Icons.check,
-                                            size: 20.0,
-                                            color: Colors.white,
-                                          )
-                                        : const Icon(
-                                            Icons.circle_outlined,
-                                            size: 20.0,
-                                            color: Colors.blue,
-                                          ),
-                                  ),
-                                ),
-                            ],
-                          ),
+                              );
+                            });
+                          },
                         );
-                      },
+                      }),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-      floatingActionButton: isSelectionMode
-          ? FloatingActionButton.extended(
-              onPressed: _deleteSelectedItems,
-              backgroundColor: Colors.red,
-              clipBehavior: Clip.antiAlias,
-              label: const Icon(Icons.delete),
-            )
-          : null,
+        );
+      }),
+      floatingActionButton: Obx(() {
+        if (userController.isSelectionMode.value) {
+          return FloatingActionButton.extended(
+            onPressed: () async {
+              await userController.deleteSelectedDevices();
+            },
+            backgroundColor: Colors.red,
+            label: const Text("Delete"),
+            icon: const Icon(Icons.delete),
+          );
+        }
+        return const SizedBox.shrink();
+      }),
     );
   }
 

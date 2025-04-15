@@ -26,9 +26,7 @@ class _GroupUsersScreenState extends State<GroupUsersScreen> {
       adminController.isObjectsLoaded.value = false;
     }
 
-    if (adminController.groupedUsers.isEmpty) {
-      adminController.fetchUsersAndGroupObjects();
-    }
+    adminController.fetchUsersAndGroupObjects();
 
     adminController.groupSearchQuery.value
         .addListener(adminController.filterGroups);
@@ -154,8 +152,8 @@ class _GroupUsersScreenState extends State<GroupUsersScreen> {
                                   size: 24.0,
                                   color: Colors.red,
                                 ),
-                                onPressed: () {
-                                  adminController.removeObjectsFromUser(
+                                onPressed: () async {
+                                  await adminController.removeObjectsFromUser(
                                       user.uid, object);
                                 },
                               ),

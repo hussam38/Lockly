@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LogEntry {
   final String id;
@@ -20,22 +19,22 @@ class LogEntry {
   factory LogEntry.fromMap(Map<String, dynamic> map) {
     return LogEntry(
       id: map['id'] ?? '',
-      timestamp: (map['timestamp'] as Timestamp).toDate(), // Convert Firestore Timestamp to DateTime
+      timestamp: DateTime.parse(map['timestamp']),
       action: map['action'] ?? '',
       status: map['status'] ?? '',
       details: map['details'] ?? '',
-      userName: map['userName'] ?? '',
+      userName: map['username'] ?? '',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'timestamp': Timestamp.fromDate(timestamp), // Convert DateTime to Firestore Timestamp
+      'timestamp': timestamp.toIso8601String(),
       'action': action,
       'status': status,
       'details': details,
-      'userName': userName,
+      'username': userName,
     };
   }
 

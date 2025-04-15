@@ -1,6 +1,8 @@
+// ignore_for_file: avoid_print
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/model/user_model.dart';
 import 'package:graduation_project/utils/colors.dart';
@@ -49,8 +51,16 @@ class AuthController extends GetxController {
 
       await _prefs.saveString('role', role.value);
       await _prefs.saveString('uid', user.uid);
-      // await _firestore.collection('users').doc(user.uid).get();
       await _database.ref('users/${user.uid}').get();
+      bool isChanged = await handlePostLogin(user);
+
+      final destination = role.value == 'admin'
+          ? AppRouter.adminLayoutRoute
+          : !isChanged
+              ? AppRouter.userLayoutRoute
+              : AppRouter.editUserRoute;
+
+      Get.offNamed(destination);
       Get.snackbar(
         "Success",
         "User logged in successfully",
@@ -58,11 +68,6 @@ class AuthController extends GetxController {
         colorText: ColorManager.white,
         snackPosition: SnackPosition.BOTTOM,
       );
-      final destination = role.value == 'admin'
-          ? AppRouter.adminLayoutRoute
-          : AppRouter.userLayoutRoute;
-
-      Get.offNamed(destination);
     } catch (e) {
       Get.snackbar("Login Failed", e.toString());
     } finally {
@@ -108,6 +113,52 @@ class AuthController extends GetxController {
       );
     } catch (e) {
       Get.snackbar("Registration Failed", e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> handlePostLogin(User firebaseUser) async {
+    final snapshot =
+        await _database.ref('users/${firebaseUser.uid}/mustChangePasswd').get();
+    final mustChange = snapshot.value as bool? ?? false;
+    return mustChange;
+  }
+
+  Future<void> changePassword(String newPasswd) async {
+    try {
+      isLoading.value = true;
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.updatePassword(newPasswd);
+        await _database.ref('users/${user.uid}/mustChangePasswd').remove();
+
+        Get.snackbar(
+          "Success",
+          "Password changed successfully.",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        Get.offNamed(AppRouter.userLayoutRoute);
+      } else {
+        Get.snackbar(
+          "Error",
+          "User not logged in.",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      print("Error changing password: $e");
+      Get.snackbar(
+        "Error",
+        "Failed to change password: ${e.toString()}",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } finally {
       isLoading.value = false;
     }

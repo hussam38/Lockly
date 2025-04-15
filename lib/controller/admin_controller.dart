@@ -4,11 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/logs_controller.dart';
 import 'package:graduation_project/model/device_model.dart';
 import 'package:graduation_project/services/prefs.dart';
 import 'package:graduation_project/shared/extensions.dart';
 import 'package:graduation_project/utils/router.dart';
 
+import '../model/logs_model.dart';
 import '../model/user_model.dart';
 import '../view/admin/admin_home.dart';
 import '../view/admin/admin_logs.dart';
@@ -739,7 +741,7 @@ class AdminController extends GetxController {
   final SharedPrefsService _prefs = SharedPrefsService.instance;
   SharedPrefsService get prefs => _prefs;
 
-  // final LogsController logsController = Get.find<LogsController>();
+  final LogsController logsController = Get.find<LogsController>();
 
   RxInt currentIndex = 0.obs;
   RxList pages = const <Widget>[
@@ -804,77 +806,90 @@ class AdminController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Sort and get the selected devices
+      // Validate currentUser
+      final userId = currentUser.value?.uid;
+      if (userId == null) {
+        throw Exception("Current user is not logged in.");
+      }
+
+      // Validate selectedItems
+      if (selectedItems.isEmpty) {
+        throw Exception("No devices selected for deletion.");
+      }
+
+      // Validate deviceState
+      if (deviceState.isEmpty) {
+        throw Exception("Device state is empty. No devices to delete.");
+      }
+
+      // Ensure all selected indices are valid
       final sortedIndices = selectedItems.toList()
         ..sort((a, b) => b.compareTo(a));
+      for (final index in sortedIndices) {
+        if (index < 0 || index >= deviceState.length) {
+          throw RangeError(
+              "Invalid index $index. Valid range is 0 to ${deviceState.length - 1}.");
+        }
+      }
+
+      // Get the selected devices
       final selectedDevices =
           sortedIndices.map((index) => deviceState[index]).toList();
 
-      final userId = currentUser.value?.uid;
-      if (userId != null) {
-        // Reference to the users and devices nodes in Realtime Database
-        DatabaseReference userRef = _database.ref('users/$userId');
-        DatabaseReference devicesRef = _database.ref('devices');
+      // Reference to the users and devices nodes in Realtime Database
+      DatabaseReference userRef = _database.ref('users/$userId');
+      DatabaseReference devicesRef = _database.ref('devices');
 
-        // Update the accessibleObjects list of the current user
-        final updatedAccessibleObjects = currentUser.value!.accessibleObjects
-            .where((object) =>
-                !selectedDevices.any((device) => device.name == object))
-            .toList();
+      // Update the accessibleObjects list of the current user
+      final updatedAccessibleObjects = currentUser.value!.accessibleObjects
+          .where((object) =>
+              !selectedDevices.any((device) => device.name == object))
+          .toList();
 
-        // Update user data in Realtime Database
-        await userRef.update({
-          'accessibleObjects': updatedAccessibleObjects,
-        });
+      // Update user data in Realtime Database
+      await userRef.update({
+        'accessibleObjects': updatedAccessibleObjects,
+      });
 
-        // Remove the selected devices from the 'assignedTo' field
-        for (final device in selectedDevices) {
-          final deviceRef = devicesRef.child(device.id);
+      // Remove the selected devices from the 'assignedTo' field
+      for (final device in selectedDevices) {
+        final deviceRef = devicesRef.child(device.id);
 
-          // Map<String, String> userMap = {
-          //   'uid': userId,
-          //   'username': currentUser.value!.name,
-          // };
+        // Fetch the assignedTo field for the device
+        final snapshot = await deviceRef.child('assignedTo').get();
 
-          // Fetch the assignedTo field for the device
-          final snapshot = await deviceRef
-              .child('assignedTo')
-              .orderByChild('uid')
-              .equalTo(userId)
-              .once();
+        if (snapshot.exists) {
+          final assignedToData = Map<String, dynamic>.from(
+              snapshot.value as Map<dynamic, dynamic>);
 
-          // Check if snapshot.value is not null before accessing its entries
-          if (snapshot.snapshot.value != null) {
-            final updates = <String, dynamic>{};
-            final entries = Map<String, dynamic>.from(
-                snapshot.snapshot.value as Map<dynamic, dynamic>);
+          // Remove the user from the assignedTo list
+          assignedToData.remove(userId);
 
-            final keysToRemove = entries.entries
-                .where((entry) => entry.value['uid'] == userId)
-                .map((entry) => entry.key)
-                .toList();
-
-            for (var key in keysToRemove) {
-              updates['assignedTo/$key'] = null; // Removing the user entry
-            }
-
-            if (updates.isNotEmpty) {
-              await deviceRef.update(updates);
-            }
+          if (assignedToData.isEmpty) {
+            // If no users are left, delete the device
+            await deviceRef.remove();
+            print("Device ${device.id} deleted as no users are assigned.");
+          } else {
+            // Otherwise, update the assignedTo field
+            await deviceRef.update({
+              'assignedTo': assignedToData,
+            });
           }
         }
-
-        // Update the local state
-        for (final index in sortedIndices) {
-          deviceState.removeAt(index);
-        }
-        selectedItems.clear();
-        isSelectionMode.value = false;
-
-        // Update the current user's accessibleObjects locally
-        currentUser.value = currentUser.value!
-            .copyWith(accessibleObjects: updatedAccessibleObjects);
       }
+
+      // Update the local state
+      for (final device in selectedDevices) {
+        deviceState.removeWhere((d) => d.id == device.id);
+      }
+
+      isSelectionMode.value = false;
+      selectedItems.clear();
+      // Update the current user's accessibleObjects locally
+      currentUser.value = currentUser.value!
+          .copyWith(accessibleObjects: updatedAccessibleObjects);
+
+      print("Selected devices deleted successfully.");
     } catch (e) {
       print("Error deleting selected devices: $e");
       Get.snackbar(
@@ -892,7 +907,6 @@ class AdminController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Fetch devices from Realtime Database
       final devicesSnapshot = await _database.ref('devices').get();
 
       if (currentUser.value != null) {
@@ -901,10 +915,8 @@ class AdminController extends GetxController {
 
         final now = DateTime.now().microsecondsSinceEpoch;
 
-        // Check if the snapshot has any data
         if (devicesSnapshot.exists) {
           deviceState.value = devicesSnapshot.children.where((doc) {
-            // Safely cast to Map<String, dynamic>
             final data =
                 Map<String, dynamic>.from(doc.value as Map<dynamic, dynamic>);
             return accessibleObjects.contains(data['name']);
@@ -913,24 +925,36 @@ class AdminController extends GetxController {
                 Map<String, dynamic>.from(doc.value as Map<dynamic, dynamic>);
             final lockUntil = data['lockUntil'] ?? 0;
 
+            // Check if the lock has expired
             final isStillLocked = (lockUntil is int) && lockUntil > now;
 
-            // Ensure 'id' and other fields are valid when creating the model
+            // If the lock has expired, reset the locked state
+            if (!isStillLocked) {
+              _database.ref('devices/${doc.key}').update({
+                'locked': false,
+                'lockUntil': 0,
+                'lockedBy': null,
+                'mode': 'closed', // Reset mode to 'closed'
+              });
+            }
+
             return DeviceModel.fromMap({
               'id': doc.key ?? '',
               'name': data['name'] ?? '',
               'status': data['status'] ?? 'unknown',
-              'mode': data['mode'] ?? 'closed',
+              'mode': isStillLocked
+                  ? data['mode']
+                  : 'closed', // Reset mode if unlocked
+              'assignedTo': data['assignedTo'] ?? {},
               'locked': isStillLocked,
               'lockUntil': lockUntil,
-              // Add any other necessary fields with default values if missing
+              'lockedBy': isStillLocked ? data['lockedBy'] : null,
             });
           }).toList();
 
           print(
               "Devices retrieved: ${deviceState.map((d) => d.name).toList()}");
 
-          // Sorting the devices by status and name
           deviceState.sort((a, b) {
             final aStatus = a.status.toLowerCase();
             final bStatus = b.status.toLowerCase();
@@ -943,6 +967,7 @@ class AdminController extends GetxController {
 
             return a.name.toLowerCase().compareTo(b.name.toLowerCase());
           });
+          deviceState.refresh();
 
           print("Filtered devices: $deviceState");
         } else {
@@ -951,6 +976,7 @@ class AdminController extends GetxController {
       } else {
         print("Current user is null, cannot fetch accessible devices.");
       }
+      startDeviceListeners();
     } catch (e) {
       print("Error fetching devices: $e");
       Get.snackbar(
@@ -964,29 +990,99 @@ class AdminController extends GetxController {
     }
   }
 
+  // Future<void> fetchAccessibleDevices() async {
+  //   try {
+  //     isLoading.value = true;
+  //     final devicesSnapshot = await _database.ref('devices').get();
+  //     if (currentUser.value != null) {
+  //       final accessibleObjects = currentUser.value!.accessibleObjects;
+  //       print("Accessible objects for current user: $accessibleObjects");
+  //       final now = DateTime.now().microsecondsSinceEpoch;
+  //       if (devicesSnapshot.exists) {
+  //         deviceState.value = devicesSnapshot.children.where((doc) {
+  //           final data =
+  //               Map<String, dynamic>.from(doc.value as Map<dynamic, dynamic>);
+  //           return accessibleObjects.contains(data['name']);
+  //         }).map((doc) {
+  //           final data =
+  //               Map<String, dynamic>.from(doc.value as Map<dynamic, dynamic>);
+  //           final lockUntil = data['lockUntil'] ?? 0;
+  //           final isStillLocked = (lockUntil is int) && lockUntil > now;
+  //           return DeviceModel.fromMap({
+  //             'id': doc.key ?? '',
+  //             'name': data['name'] ?? '',
+  //             'status': data['status'] ?? 'unknown',
+  //             'mode': data['mode'] ?? 'closed',
+  //             'locked': isStillLocked,
+  //             'lockUntil': lockUntil,
+  //           });
+  //         }).toList();
+  //         print(
+  //             "Devices retrieved: ${deviceState.map((d) => d.name).toList()}");
+  //         deviceState.sort((a, b) {
+  //           final aStatus = a.status.toLowerCase();
+  //           final bStatus = b.status.toLowerCase();
+  //           if (aStatus == 'online' && bStatus != 'online') {
+  //             return -1;
+  //           } else if (aStatus != 'online' && bStatus == 'online') {
+  //             return 1;
+  //           }
+  //           return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  //         });
+  //         deviceState.refresh();
+  //         print("Filtered devices: $deviceState");
+  //       } else {
+  //         print("No devices found.");
+  //       }
+  //     } else {
+  //       print("Current user is null, cannot fetch accessible devices.");
+  //     }
+  //     startDeviceListeners();
+  //   } catch (e) {
+  //     print("Error fetching devices: $e");
+  //     Get.snackbar(
+  //       "Error",
+  //       "Failed to fetch devices: ${e.toString()}",
+  //       backgroundColor: Colors.red,
+  //       colorText: Colors.white,
+  //     );
+  //   } finally {
+  //     isLoading.value = false;
+  //   }
+  // }
+
   Future<void> updateDeviceMode(String deviceId, String newMode) async {
     try {
-      // Update the mode in Realtime Database
+      final userId = currentUser.value?.uid;
+      if (userId == null) {
+        throw Exception("Current User isn't logged in.");
+      }
       await _database.ref('devices/$deviceId').update({
         'mode': newMode,
+        'lockedBy': newMode == 'opened' ? userId : null,
+        'locked': newMode == 'opened' ? true : false,
       });
 
       // Find the device in the local state and update its mode
       final index = deviceState.indexWhere((device) => device.id == deviceId);
       if (index != -1) {
-        deviceState[index] = deviceState[index].copyWith(mode: newMode);
+        deviceState[index] = deviceState[index].copyWith(
+          mode: newMode,
+          locked: newMode == 'opened',
+          lockedBy: newMode == 'opened' ? userId : null,
+        );
         deviceState.refresh();
       }
 
       // Log the action
-      // logsController.addLog(LogEntry(
-      //     id: currentUser.value!.uid,
-      //     timestamp: DateTime.now(),
-      //     action: 'Access Attempt',
-      //     status: 'Success',
-      //     details:
-      //         '${currentUser.value!.name} has Opened ${deviceState[index].name}',
-      //     userName: currentUser.value!.name));
+      logsController.addLog(LogEntry(
+          id: currentUser.value!.uid,
+          timestamp: DateTime.now(),
+          action: 'Access Attempt',
+          status: 'Success',
+          details:
+              '${currentUser.value!.name} has ${newMode == 'opened' ? 'opened' : 'closed'} ${deviceState[index].name}',
+          userName: currentUser.value!.name));
     } catch (e) {
       print("Error updating device mode: $e");
       Get.snackbar(
@@ -1000,43 +1096,34 @@ class AdminController extends GetxController {
 
   Future<void> lockDevice(String deviceId, int duration) async {
     try {
+      final userId = currentUser.value?.uid;
+      if (userId == null) {
+        throw Exception("Current User isn't logged in.");
+      }
+
       final lockUntil =
           DateTime.now().microsecondsSinceEpoch + (duration * 1000);
 
-      // Update the lock status and lockUntil timestamp in the Realtime Database
+      // lock for the current user.
       await _database.ref('devices/$deviceId').update({
         'locked': true,
         'lockUntil': lockUntil,
+        'lockedBy': userId,
       });
 
-      // Update the local device state
       final index = deviceState.indexWhere((device) => device.id == deviceId);
       if (index != -1) {
         deviceState[index] = deviceState[index].copyWith(
           locked: true,
           lockUntil: lockUntil,
+          lockedBy: userId,
         );
         deviceState.refresh();
       }
 
       // Automatically unlock after the duration
       Future.delayed(Duration(seconds: duration), () async {
-        await _database.ref('devices/$deviceId').update({
-          'locked': false,
-          'lockUntil': 0,
-          'mode': 'closed',
-        });
-
-        // Update the local device state
-        final index = deviceState.indexWhere((device) => device.id == deviceId);
-        if (index != -1) {
-          deviceState[index] = deviceState[index].copyWith(
-            locked: false,
-            lockUntil: 0,
-            mode: 'closed',
-          );
-          deviceState.refresh();
-        }
+        await unlockDevice(deviceId);
       });
     } catch (e) {
       print("Error locking/unlocking door: $e");
@@ -1047,6 +1134,83 @@ class AdminController extends GetxController {
         colorText: Colors.white,
       );
     }
+  }
+
+  Future<void> unlockDevice(String deviceId) async {
+    try {
+      await _database.ref('devices/$deviceId').update({
+        'locked': false,
+        'lockUntil': 0,
+        'mode': 'closed',
+        'lockedBy': null,
+      });
+
+      final index = deviceState.indexWhere((device) => device.id == deviceId);
+      if (index != -1) {
+        deviceState[index] = deviceState[index].copyWith(
+          locked: false,
+          lockUntil: 0,
+          mode: 'closed',
+          lockedBy: null,
+        );
+        deviceState.refresh();
+      }
+    } catch (e) {
+      print("Error unlocking door: $e");
+      Get.snackbar("Error", "Failed to unlock the door: ${e.toString()}",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  void startDeviceListeners() {
+    _database.ref('devices').onChildChanged.listen((event) {
+      final deviceId = event.snapshot.key;
+      final deviceData = Map<String, dynamic>.from(
+          event.snapshot.value as Map<dynamic, dynamic>);
+
+      // Find the device and update it based on changes in Firebase
+      final index = deviceState.indexWhere((device) => device.id == deviceId);
+      if (index != -1) {
+        final updatedDevice = DeviceModel.fromMap({
+          'id': deviceId ?? '',
+          'name': deviceData['name'] ?? '',
+          'status': deviceData['status'] ?? 'unknown',
+          'mode': deviceData['mode'] ?? 'closed',
+          'locked': deviceData['locked'] ?? false,
+          'lockUntil': deviceData['lockUntil'] ?? 0,
+          'lockedBy': deviceData['lockedBy'],
+        });
+
+        deviceState[index] = updatedDevice;
+        deviceState.refresh();
+      }
+    });
+
+    _database.ref('devices').onChildRemoved.listen((event) {
+      final deviceId = event.snapshot.key;
+
+      deviceState.removeWhere((d) => d.id == deviceId);
+      deviceState.refresh();
+    });
+  }
+
+  void listenToCurrentUserChanges() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    _database.ref('users/$uid').onValue.listen((event) {
+      if (event.snapshot.exists) {
+        final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+        currentUser.value = currentUser.value?.copyWith(
+          accessibleObjects: List<String>.from(data['accessibleObjects'] ?? []),
+        );
+
+        // Refetch accessible devices when user's access changes
+        fetchAccessibleDevices();
+      }
+    });
   }
 
   void groupUsersByObjects() {
@@ -1197,10 +1361,10 @@ class AdminController extends GetxController {
       isLoading.value = true;
 
       // Remove door from the tempSelectedGroups map
-      tempSelectedGroups[userId]?.remove(door);
-      if (tempSelectedGroups[userId]?.isEmpty ?? false) {
-        tempSelectedGroups.remove(userId);
-      }
+      // tempSelectedGroups[userId]?.remove(door);
+      // if (tempSelectedGroups[userId]?.isEmpty ?? false) {
+      //   tempSelectedGroups.remove(userId);
+      // }
 
       // Find the user and remove the door from their accessible objects
       UserModel user = users.firstWhere((user) => user.uid == userId);
@@ -1253,7 +1417,7 @@ class AdminController extends GetxController {
   Future<void> fetchUsersAndGroupObjects() async {
     try {
       isGroupsLoaded.value = true;
-      // await fetchUsers();
+      await fetchUsers();
       groupUsersByObjects();
     } catch (e) {
       print("Error fetching users and grouping objects: $e");
@@ -1299,6 +1463,7 @@ class AdminController extends GetxController {
 
       // Store user data in Realtime Database
       await _database.ref('users/$uid').set(newUser.toMap());
+      await _database.ref('users/$uid/mustChangePasswd').set(true);
 
       // Loop through the list of doors to assign user to devices
       for (String door in doors) {
@@ -1545,27 +1710,19 @@ class AdminController extends GetxController {
   Future<void> fetchObjects() async {
     try {
       isLoading.value = true;
-
-      // Reference to the 'devices' node in Realtime Database
       DatabaseReference devicesRef = _database.ref('devices');
-
-      // Fetch all devices data from Realtime Database
       DataSnapshot snapshot = await devicesRef.get();
-
       if (snapshot.exists) {
         // If data exists, map the device names
         List<String> devicesList = [];
         Map<dynamic, dynamic> devicesData =
             snapshot.value as Map<dynamic, dynamic>;
-
         devicesData.forEach((key, value) {
           String deviceName = value['name']?.toString() ?? 'not defined';
           devicesList.add(deviceName);
         });
-
         // Sort the devices list
         devicesList.sort();
-
         allObjects.value = devicesList;
         print("Fetched objects: $allObjects");
       } else {
@@ -1631,5 +1788,6 @@ class AdminController extends GetxController {
     fetchUser().then((_) async {
       await fetchAccessibleDevices();
     });
+    listenToCurrentUserChanges();
   }
 }

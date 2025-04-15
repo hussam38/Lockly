@@ -11,8 +11,7 @@ class AppBindings extends Bindings {
   void dependencies() async {
     await Get.putAsync(() => SharedPrefsService().init());
     Get.lazyPut(() => AuthController(), fenix: true);
-    // Get.lazyPut(() => LogsController(), fenix: true);
-
+    Get.lazyPut(() => LogsController(), fenix: true);
     log("App Bindings initialized");
   }
 }

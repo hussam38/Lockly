@@ -95,9 +95,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           itemBuilder: (ctx, i) {
                             final device = adminController.deviceState[i];
-                            final isLocked = device.locked &&
-                                DateTime.now().millisecondsSinceEpoch <
-                                    device.lockUntil;
+                            final isLocked = device.locked;
 
                             return Obx(() {
                               return GestureDetector(

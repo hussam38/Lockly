@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/user_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/router.dart';
 
@@ -14,6 +15,7 @@ class UserSettingsScreen extends StatefulWidget {
 class _UserSettingsScreenState extends State<UserSettingsScreen> {
   bool isDarkTheme = false;
   bool isNotificationsEnabled = true;
+  final UserController userController = Get.find<UserController>();
 
   @override
   Widget build(BuildContext context) {
@@ -49,12 +51,12 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Hussam Nasser',
+                          userController.currentUser.value!.name,
                           style: Theme.of(context).textTheme.labelMedium,
                         ),
                         SizedBox(height: 4.0.h),
                         Text(
-                          'Hussam@mail-server.com',
+                          userController.currentUser.value!.email,
                           style: Theme.of(context).textTheme.labelSmall,
                           overflow: TextOverflow.ellipsis,
                         ),

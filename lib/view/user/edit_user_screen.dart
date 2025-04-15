@@ -1,11 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/auth_controller.dart';
 import 'package:graduation_project/services/helpers.dart';
 import 'package:graduation_project/utils/components.dart';
-import 'package:image_picker/image_picker.dart';
 
 class EditUserScreen extends StatefulWidget {
   const EditUserScreen({super.key});
@@ -17,28 +15,11 @@ class EditUserScreen extends StatefulWidget {
 class _EditUserScreenState extends State<EditUserScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _passwordController = TextEditingController();
-  XFile? _imageFile;
+  final AuthController authController = Get.find<AuthController>();
 
-  final ImagePicker _picker = ImagePicker();
-
-  Future<void> _pickImage() async {
-    try {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      setState(() {
-        _imageFile = pickedFile;
-      });
-    } catch (e) {
-      Get.snackbar('Error', 'Error picking image: $e');
-    }
-  }
-
-  void _saveChanges() {
+  void _saveChanges() async {
     if (_formKey.currentState!.validate()) {
-      // Save changes
-      // You can add your logic to save the changes here
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Changes saved successfully!')),
-      );
+      authController.changePassword(_passwordController.text.trim());
     }
   }
 
@@ -57,20 +38,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
           padding: EdgeInsets.all(16.0.w),
           child: Form(
             key: _formKey,
-            child: ListView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundImage: _imageFile != null
-                        ? FileImage(File(_imageFile!.path))
-                        : null,
-                    child: _imageFile == null
-                        ? const Icon(Icons.add_a_photo, size: 50)
-                        : null,
-                  ),
-                ),
                 SizedBox(height: 16.0.h),
                 SizedBox(
                   height: size.width * .25.h,

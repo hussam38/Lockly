@@ -27,6 +27,7 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
       adminController.fetchObjects();
       adminController.isObjectsLoaded.value = false;
     }
+    adminController.selectedObjects.clear();
   }
 
   @override

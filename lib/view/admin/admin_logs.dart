@@ -16,11 +16,7 @@ class AdminLogsScreen extends StatefulWidget {
 
 class _AdminLogsScreenState extends State<AdminLogsScreen> {
   final LogsController logsController = Get.find<LogsController>();
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  
 
   @override
   Widget build(BuildContext context) {
