@@ -125,8 +125,8 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    Get.offAllNamed(AppRouter.roleSelectionRoute);
+                  onTap: () async {
+                    await userController.logout();
                   },
                 ),
               ],

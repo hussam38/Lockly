@@ -407,17 +407,9 @@ class UserController extends GetxController {
     });
   }
 
-  void logout() async {
+  Future<void> logout() async {
     await _prefs.clear();
     await _auth.signOut();
-    // await logsController.addLog(LogEntry(
-    //   id: currentUser.value!.uid,
-    //   timestamp: DateTime.now(),
-    //   action: 'Logout',
-    //   status: 'Success',
-    //   details: '${currentUser.value!.name} logged out',
-    //   userName: currentUser.value!.name,
-    // ));
     Get.offNamed(AppRouter.roleSelectionRoute);
   }
 

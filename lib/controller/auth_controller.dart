@@ -38,27 +38,47 @@ class AuthController extends GetxController {
 
   void loginRole(String userRole) {
     role.value = userRole;
+    print("Role: ${role.value}");
   }
 
   // user login
   Future<void> loginUser(String email, String password) async {
     try {
       isLoading.value = true;
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: email.trim(), password: password.trim());
-      User? user = userCredential.user;
-      if (user == null) throw Exception("User not found after login.");
 
-      await _prefs.saveString('role', role.value);
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+      User? user = userCredential.user;
+      if (user == null) throw Exception("Login succeeded, but user is null.");
+
+      final roleSnapshot = await _database.ref('users/${user.uid}/role').get();
+      final dbRole = roleSnapshot.value?.toString();
+
+      if (dbRole == null) {
+        await _auth.signOut();
+        throw Exception("User role not found in database.");
+      }
+
+      if (role.value == 'admin' && dbRole != 'admin') {
+        await _auth.signOut();
+        debugPrint("Blocked: user selected 'admin' but is not admin.");
+        throw Exception("Access Denied: You are not authorized as admin.");
+      }
+
+      await _prefs.saveString('role', dbRole);
       await _prefs.saveString('uid', user.uid);
-      await _database.ref('users/${user.uid}').get();
+
       bool isChanged = await handlePostLogin(user);
 
-      final destination = role.value == 'admin'
+      final destination = dbRole == 'admin'
           ? AppRouter.adminLayoutRoute
           : !isChanged
               ? AppRouter.userLayoutRoute
               : AppRouter.editUserRoute;
+
+      debugPrint("Navigating to: $destination");
 
       Get.offNamed(destination);
       Get.snackbar(
@@ -69,11 +89,18 @@ class AuthController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      Get.snackbar("Login Failed", e.toString());
+      debugPrint("Login error: $e");
+      Get.snackbar(
+        "Login Failed",
+        e.toString().replaceFirst("Exception: ", ""),
+        backgroundColor: Colors.red,
+        colorText: ColorManager.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } finally {
       isLoading.value = false;
-      debugPrint("User ID: ${_prefs.getString('uid') ?? 'UID not found'}");
-      debugPrint("User Role: ${_prefs.getString('role') ?? 'Role not found'}");
+      debugPrint("Final UID: ${_prefs.getString('uid')}");
+      debugPrint("Final ROLE: ${_prefs.getString('role')}");
     }
   }
 
