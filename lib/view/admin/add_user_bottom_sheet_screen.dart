@@ -3,8 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/controller/admin_controller.dart';
 import 'package:graduation_project/services/helpers.dart';
+import 'package:graduation_project/shared/extensions.dart';
 import 'package:graduation_project/utils/components.dart';
-
 
 class AddUserBottomSheet extends StatefulWidget {
   const AddUserBottomSheet({super.key});
@@ -36,13 +36,11 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Padding(
-      padding: EdgeInsets.all(16.0.w),
+      padding: EdgeInsets.all(12.0.w),
       child: Form(
         key: _formKey,
         child: SizedBox(
@@ -53,16 +51,15 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
                 'Add New User',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              SizedBox(height: 16.0.h),
-              // user name
+              SizedBox(height: 12.0.w),
               SizedBox(
                 height: size.width * .25.h,
                 child: textFormComponent(
                   controller: nameController,
                   keyboardType: TextInputType.text,
                   prefixIcon: Icons.person,
-                  onChanged: (value) {
-                    nameController.text = value;
+                  onSaved: (value) {
+                    nameController.text = value.orEmpty();
                   },
                   context: context,
                   labelText: 'Name',
@@ -75,15 +72,14 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
                   },
                 ),
               ),
-              // email
               SizedBox(
                 height: size.width * .25.h,
                 child: textFormComponent(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: Icons.email_rounded,
-                  onChanged: (value) {
-                    emailController.text = value;
+                  onSaved: (value) {
+                    emailController.text = value.orEmpty();
                   },
                   context: context,
                   hintText: 'e.g. name@mail.com',
@@ -99,14 +95,13 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
                   },
                 ),
               ),
-              // password
               SizedBox(
                 height: size.width * .25.h,
                 child: textFormComponent(
                   controller: passwordController,
                   keyboardType: TextInputType.visiblePassword,
-                  onChanged: (value) {
-                    passwordController.text = value;
+                  onSaved: (value) {
+                    passwordController.text = value.orEmpty();
                   },
                   prefixIcon: Icons.lock,
                   suffixIcon: Icons.visibility,
@@ -143,7 +138,7 @@ class _AddUserBottomSheetState extends State<AddUserBottomSheet> {
                       );
                     }).toList(),
                   )),
-              SizedBox(height: 16.0.h),
+              SizedBox(height: 12.0.w),
               // button
               Obx(() => ElevatedButton(
                     onPressed: () async {

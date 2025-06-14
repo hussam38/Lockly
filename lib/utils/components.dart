@@ -28,12 +28,13 @@ Widget textFormComponent(
     {required TextEditingController controller,
     required TextInputType keyboardType,
     required IconData prefixIcon,
-    required void Function(String)? onChanged,
+    void Function(String)? onChanged,
     required String? Function(String?)? validate,
     IconData? suffixIcon,
     required BuildContext context,
     required String hintText,
     Function(String?)? onSaved,
+    void Function()? onSuffixPressed,
     TextStyle? style,
     double? width,
     double? height,
@@ -62,11 +63,11 @@ Widget textFormComponent(
           size: 24.0,
           color: Colors.black,
         ),
-        suffixIcon: isPassword
+        suffixIcon: suffixIcon != null
             ? IconButton(
-                onPressed: () {},
+                onPressed: onSuffixPressed,
                 highlightColor: ColorManager.transparent,
-                icon: Icon(suffixIcon),
+                icon: Icon(suffixIcon, color: Colors.black,),
               )
             : null,
         hintText: hintText,

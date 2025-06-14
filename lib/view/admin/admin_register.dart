@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/controller/auth_controller.dart';
+import 'package:graduation_project/shared/extensions.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/values_manager.dart';
 
@@ -55,8 +56,8 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                       controller: nameController,
                       keyboardType: TextInputType.text,
                       prefixIcon: Icons.person,
-                      onChanged: (value) {
-                        nameController.text = value;
+                      onSaved: (value) {
+                        nameController.text = value.orEmpty();
                       },
                       context: context,
                       labelText: 'Name',
@@ -75,8 +76,8 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_rounded,
-                      onChanged: (value) {
-                        emailController.text = value;
+                      onSaved: (value) {
+                        emailController.text = value.orEmpty();
                       },
                       context: context,
                       hintText: 'e.g. name@mail.com',
@@ -114,8 +115,8 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                     child: textFormComponent(
                       controller: passwordController,
                       keyboardType: TextInputType.visiblePassword,
-                      onChanged: (value) {
-                        passwordController.text = value;
+                      onSaved: (value) {
+                        passwordController.text = value.orEmpty();
                       },
                       prefixIcon: Icons.lock,
                       suffixIcon: Icons.visibility,

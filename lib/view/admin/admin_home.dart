@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/controller/admin_controller.dart';
 import 'package:graduation_project/utils/colors.dart';
+import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/values_manager.dart';
 import '../../utils/asset_manager.dart';
 
@@ -30,7 +31,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           Padding(
             padding: EdgeInsets.all(8.0.w),
             child: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Get.toNamed(AppRouter.addObjectRoute);
+              },
               icon: const Icon(
                 Icons.add,
                 size: 30.0,
@@ -149,18 +152,35 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                                                               'online' &&
                                                           !isLocked)
                                                       ? (bool value) async {
-                                                          final newMode = value
-                                                              ? 'opened'
-                                                              : 'closed';
-                                                          await adminController
-                                                              .updateDeviceMode(
-                                                                  device.id,
-                                                                  newMode);
-                                                          if (value) {
+                                                          final canOpen =
+                                                              await adminController
+                                                                  .canOpenDoor(
+                                                                      device
+                                                                          .id);
+                                                          if (canOpen) {
+                                                            final newMode =
+                                                                value
+                                                                    ? 'opened'
+                                                                    : 'closed';
                                                             await adminController
-                                                                .lockDevice(
+                                                                .updateDeviceMode(
                                                                     device.id,
-                                                                    30);
+                                                                    newMode);
+                                                            if (value) {
+                                                              await adminController
+                                                                  .lockDevice(
+                                                                      device.id,
+                                                                      10);
+                                                            }
+                                                          } else {
+                                                            Get.snackbar(
+                                                              "Error",
+                                                              "You cannot open this door now.",
+                                                              snackPosition:
+                                                                  SnackPosition
+                                                                      .BOTTOM,
+                                                                      backgroundColor: Colors.red
+                                                            );
                                                           }
                                                         }
                                                       : null,

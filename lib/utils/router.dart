@@ -3,6 +3,7 @@ import 'package:graduation_project/shared/bindings/admin_bindings.dart';
 import 'package:graduation_project/shared/bindings/user_bindings.dart';
 import 'package:graduation_project/shared/screens/role_selection_screen.dart';
 import 'package:graduation_project/shared/screens/splash_screen.dart';
+import 'package:graduation_project/view/admin/add_object_screen.dart';
 import 'package:graduation_project/view/admin/admin_home.dart';
 import 'package:graduation_project/view/admin/admin_layout.dart';
 import 'package:graduation_project/view/admin/admin_login.dart';
@@ -28,6 +29,7 @@ class AppRouter {
   static const String roleSelectionRoute = '/role-selection';
   static const String phoneEnterRoute = '/phone-entry';
   static const String otpVerificationRoute = '/otp-verification';
+  static const String addObjectRoute = '/add-object';
 
   // admin routes
   static const String adminLayoutRoute = '/admin-layout';
@@ -75,6 +77,12 @@ class AppRouter {
     ),
 
     // admin
+    // add-object
+    GetPage(
+      name: addObjectRoute,
+      page: () => AddObjectScreen(),
+      transition: Transition.cupertino,
+    ),
     // admin-layout
     GetPage(
       name: adminLayoutRoute,

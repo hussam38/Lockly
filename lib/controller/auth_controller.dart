@@ -3,37 +3,118 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/logs_controller.dart';
+import 'package:graduation_project/model/logs_model.dart';
 import 'package:graduation_project/model/user_model.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/router.dart';
+import 'package:local_auth/local_auth.dart';
 
 import '../services/prefs.dart';
 
 class AuthController extends GetxController {
   final SharedPrefsService _prefs = SharedPrefsService.instance;
   SharedPrefsService get prefs => _prefs;
-  // final LogsController logsController = Get.find<LogsController>();
+  final LogsController logsController = Get.find<LogsController>();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   Rx<User?> firebaseUser = Rx<User?>(null);
-  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseDatabase _database = FirebaseDatabase.instance;
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  LocalAuthentication get localAuth => _localAuth;
+  var isAuth = false.obs;
+  bool _isAuthenticating = false;
 
   RxBool isLoading = false.obs;
   RxString role = "".obs;
+  var isPasswordVisible = false.obs;
 
-  Future<void> checkUserStatus() async {
-    isLoading.value = true;
-    String userRole = _prefs.getString('role') ?? '';
-    if (userRole == 'admin') {
+  void togglePasswordVisibility() {
+    isPasswordVisible.toggle();
+  }
+
+  Future<void> authWithBiometrics() async {
+    final canCheckBiometrics = await _localAuth.canCheckBiometrics;
+    final isDeviceSupported = await _localAuth.isDeviceSupported();
+    if (!canCheckBiometrics || !isDeviceSupported) {
+      Get.snackbar("Error", "Biometric authentication not supported");
+      SystemNavigator.pop();
+      return;
+    }
+    try {
+      final didAuth = await _localAuth.authenticate(
+        localizedReason: 'Please authenticate to access your account',
+        options: const AuthenticationOptions(
+          useErrorDialogs: true,
+          stickyAuth: true,
+          biometricOnly: false,
+        ),
+      );
+
+      isAuth.value = didAuth;
+      if (didAuth) {
+        String? r = _prefs.getString('role');
+        if (r == 'admin') {
+          Get.offAllNamed(AppRouter.adminLayoutRoute);
+        } else if (r == 'user') {
+          Get.offAllNamed(AppRouter.userLayoutRoute);
+        } else {
+          Get.offAllNamed(AppRouter.roleSelectionRoute);
+        }
+      } else {
+        SystemNavigator.pop();
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Authentication failed: $e");
+    }
+  }
+
+  Future<void> canAuthWithBiometrics() async {
+    if (_isAuthenticating) return;
+
+    final isAvailable = await _localAuth.canCheckBiometrics ||
+        await _localAuth.isDeviceSupported();
+
+    if (!isAvailable) {
+      _navigateByRole(); // fallback if not supported
+      return;
+    }
+
+    try {
+      _isAuthenticating = true;
+
+      final didAuthenticate = await _localAuth.authenticate(
+        localizedReason: 'Authenticate to continue',
+        options: const AuthenticationOptions(
+          biometricOnly: false,
+          stickyAuth: true,
+        ),
+      );
+
+      if (didAuthenticate) {
+        _navigateByRole();
+      } else {
+        Get.snackbar("Error", "Authentication cancelled or failed");
+      }
+    } catch (e) {
+      print("Auth error: $e");
+      Get.snackbar("Error", "Authentication error: $e");
+    } finally {
+      _isAuthenticating = false;
+    }
+  }
+
+  void _navigateByRole() {
+    final role = _prefs.getString('role') ?? '';
+    if (role == 'admin') {
       Get.offNamed(AppRouter.adminLayoutRoute);
-    } else if (userRole == 'user') {
+    } else if (role == 'user') {
       Get.offNamed(AppRouter.userLayoutRoute);
     } else {
       Get.offNamed(AppRouter.roleSelectionRoute);
     }
-    isLoading.value = false;
   }
 
   void loginRole(String userRole) {
@@ -79,6 +160,16 @@ class AuthController extends GetxController {
               : AppRouter.editUserRoute;
 
       debugPrint("Navigating to: $destination");
+      logsController.addLog(
+        LogEntry(
+          id: user.uid,
+          timestamp: DateTime.now(),
+          action: 'Login',
+          status: 'SUCCESS',
+          details: 'User ${user.email} logged in.',
+          userName: user.email ?? 'Unknown',
+        ),
+      );
 
       Get.offNamed(destination);
       Get.snackbar(
@@ -90,6 +181,16 @@ class AuthController extends GetxController {
       );
     } catch (e) {
       debugPrint("Login error: $e");
+      logsController.addLog(
+        LogEntry(
+          id: _auth.currentUser?.uid ?? '',
+          timestamp: DateTime.now(),
+          action: 'Login',
+          status: 'FAILED',
+          details: 'User ${_auth.currentUser!.email} log in failed.',
+          userName: _auth.currentUser?.email ?? 'Unknown',
+        ),
+      );
       Get.snackbar(
         "Login Failed",
         e.toString().replaceFirst("Exception: ", ""),
@@ -125,10 +226,18 @@ class AuthController extends GetxController {
         accessibleObjects: [],
         role: "admin",
       );
-      // await _firestore.collection("users").doc(uid).set(user.toMap());
-      // save to realtime database
       await _database.ref("users/$uid").set(user.toMap());
       loginRole('admin');
+      logsController.addLog(
+        LogEntry(
+          id: user.uid,
+          timestamp: DateTime.now(),
+          action: 'Login',
+          status: 'SUCCESS',
+          details: 'User ${user.name} registered.',
+          userName: user.email,
+        ),
+      );
 
       Get.offNamed(AppRouter.adminLoginRoute);
       Get.snackbar(
@@ -140,6 +249,17 @@ class AuthController extends GetxController {
       );
     } catch (e) {
       Get.snackbar("Registration Failed", e.toString());
+      logsController.addLog(
+        LogEntry(
+          id: _auth.currentUser?.uid ?? '',
+          timestamp: DateTime.now(),
+          action: 'Login',
+          status: 'FAILED',
+          details:
+              'User ${_auth.currentUser!.displayName} regestration failed.',
+          userName: _auth.currentUser?.email ?? 'Unknown',
+        ),
+      );
     } finally {
       isLoading.value = false;
     }
@@ -159,7 +279,6 @@ class AuthController extends GetxController {
       if (user != null) {
         await user.updatePassword(newPasswd);
         await _database.ref('users/${user.uid}/mustChangePasswd').remove();
-
         Get.snackbar(
           "Success",
           "Password changed successfully.",

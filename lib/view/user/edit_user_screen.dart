@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:graduation_project/controller/auth_controller.dart';
 import 'package:graduation_project/services/helpers.dart';
+import 'package:graduation_project/shared/extensions.dart';
 import 'package:graduation_project/utils/components.dart';
 
 class EditUserScreen extends StatefulWidget {
@@ -42,32 +43,36 @@ class _EditUserScreenState extends State<EditUserScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: 16.0.h),
-                SizedBox(
-                  height: size.width * .25.h,
-                  child: textFormComponent(
-                      controller: _passwordController,
-                      keyboardType: TextInputType.visiblePassword,
-                      prefixIcon: Icons.lock,
-                      onChanged: (value) {
-                        _passwordController.text = value;
-                      },
-                      validate: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        } else if (value.length < 8) {
-                          return 'Password must be at least 6 characters long';
-                        } else if (!isStrongPassword(value)) {
-                          return 'password must be Strong';
-                        }
-                        return null;
-                      },
-                      context: context,
-                      hintText: 'e.g Gg@12345',
-                      labelText: 'Password',
-                      isPassword: true,
-                      suffixIcon: Icons.visibility,
-                      width: double.infinity),
-                ),
+                Obx(() => SizedBox(
+                      height: size.width * .25.h,
+                      child: textFormComponent(
+                          controller: _passwordController,
+                          keyboardType: TextInputType.visiblePassword,
+                          prefixIcon: Icons.lock,
+                          onSaved: (value) {
+                            _passwordController.text = value.orEmpty();
+                          },
+                          validate: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a password';
+                            } else if (value.length < 8) {
+                              return 'Password must be at least 6 characters long';
+                            } else if (!isStrongPassword(value)) {
+                              return 'password must be Strong';
+                            }
+                            return null;
+                          },
+                          context: context,
+                          hintText: 'e.g Gg@12345',
+                          labelText: 'Password',
+                          onSuffixPressed:
+                              authController.togglePasswordVisibility,
+                          isPassword: !authController.isPasswordVisible.value,
+                          suffixIcon: authController.isPasswordVisible.value
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          width: double.infinity),
+                    )),
                 SizedBox(height: 16.0.h),
                 ElevatedButton(
                   onPressed: _saveChanges,

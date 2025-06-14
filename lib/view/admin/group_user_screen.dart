@@ -21,11 +21,8 @@ class _GroupUsersScreenState extends State<GroupUsersScreen> {
   @override
   void initState() {
     super.initState();
-    if (adminController.isObjectsLoaded.value) {
-      adminController.fetchObjects();
-      adminController.isObjectsLoaded.value = false;
-    }
 
+    adminController.fetchObjects();
     adminController.fetchUsersAndGroupObjects();
 
     adminController.groupSearchQuery.value

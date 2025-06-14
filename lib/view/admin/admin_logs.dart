@@ -16,7 +16,6 @@ class AdminLogsScreen extends StatefulWidget {
 
 class _AdminLogsScreenState extends State<AdminLogsScreen> {
   final LogsController logsController = Get.find<LogsController>();
-  
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +209,7 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
                                   children: [
                                     Icon(
                                       Icons.check_circle,
-                                      color: log.status == "Success"
+                                      color: log.status == "SUCCESS"
                                           ? Colors.green
                                           : Colors.red,
                                     ),
@@ -251,6 +250,8 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
                                         "Details: ${log.details}",
                                         style: getRegularStyle(
                                             fontSize: 12, color: Colors.black),
+                                        softWrap: true,
+                                        maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),

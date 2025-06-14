@@ -11,6 +11,8 @@ class DeviceModel {
   final int lockUntil;
   final String mode;
   final String? lockedBy;
+  final String? location;
+  final DateTime? createdAt;
 
   DeviceModel({
     required this.id,
@@ -19,7 +21,9 @@ class DeviceModel {
     required this.status,
     this.locked = false,
     this.lockUntil = 0,
-    this.lockedBy='',
+    this.createdAt,
+    this.location = '',
+    this.lockedBy = '',
     required this.mode,
   });
 
@@ -40,6 +44,9 @@ class DeviceModel {
       locked: map['locked'] ?? false,
       lockedBy: map['lockedBy'] ?? '',
       lockUntil: map['lockUntil'] ?? 0,
+      location: map['location'] ?? '',
+      createdAt:
+          map['createdAt'] != null ? DateTime.tryParse(map['createdAt']) : null,
     );
   }
 
@@ -53,6 +60,8 @@ class DeviceModel {
       'locked': locked,
       'lockUntil': lockUntil,
       'lockedBy': lockedBy,
+      'location': location,
+      'createdAt': createdAt?.toIso8601String(),
     };
   }
 
@@ -65,6 +74,8 @@ class DeviceModel {
     bool? locked,
     int? lockUntil,
     String? lockedBy,
+    String? location,
+    DateTime? createdAt,
   }) {
     return DeviceModel(
       id: id ?? this.id,
@@ -75,6 +86,8 @@ class DeviceModel {
       locked: locked ?? this.locked,
       lockUntil: lockUntil ?? this.lockUntil,
       lockedBy: lockedBy ?? this.lockedBy,
+      location: location ?? this.location,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -90,12 +103,14 @@ class DeviceModel {
         other.mode == mode &&
         other.locked == locked &&
         other.lockedBy == lockedBy &&
-        other.lockUntil == lockUntil;
+        other.lockUntil == lockUntil &&
+        other.location == location &&
+        other.createdAt == createdAt;
   }
 
   @override
   String toString() {
-    return 'DeviceModel{id: $id, name: $name, assignedTo: $assignedTo, status: $status, mode: $mode, locked: $locked, lockUntil: $lockUntil, lockedBy: $lockedBy}';
+    return 'DeviceModel{id: $id, name: $name, assignedTo: $assignedTo, status: $status, mode: $mode, locked: $locked, lockUntil: $lockUntil, lockedBy: $lockedBy, location: $location, createdAt: $createdAt}';
   }
 
   @override
@@ -107,5 +122,7 @@ class DeviceModel {
       locked.hashCode ^
       lockUntil.hashCode ^
       lockedBy.hashCode ^
-      mode.hashCode;
+      mode.hashCode ^
+      location.hashCode ^
+      createdAt.hashCode;
 }

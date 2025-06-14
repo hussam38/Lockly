@@ -9,14 +9,12 @@ import 'package:graduation_project/model/device_model.dart';
 import 'package:graduation_project/services/prefs.dart';
 import 'package:graduation_project/shared/extensions.dart';
 import 'package:graduation_project/utils/router.dart';
-
 import '../model/logs_model.dart';
 import '../model/user_model.dart';
 import '../view/admin/admin_home.dart';
 import '../view/admin/admin_logs.dart';
 import '../view/admin/admin_settings.dart';
 
-/*
 class AdminController extends GetxController {
   final SharedPrefsService _prefs = SharedPrefsService.instance;
   SharedPrefsService get prefs => _prefs;
@@ -30,10 +28,8 @@ class AdminController extends GetxController {
     AdminSettingsScreen()
   ].obs;
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseDatabase _database = FirebaseDatabase.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
   var userSearchQuery = TextEditingController().obs;
   var groupSearchQuery = TextEditingController().obs;
 
@@ -59,723 +55,130 @@ class AdminController extends GetxController {
   var selectedItems = <int>{}.obs;
   var isSelectionMode = false.obs;
 
-  // home logic
-  void changePage(int i) {
-    currentIndex.value = i;
+  final idController = TextEditingController();
+  final nameController = TextEditingController();
+  final locationController = TextEditingController();
+  final status = 'online'.obs;
+
+  Future<void> updateInfo({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final uid = currentUser.value?.uid;
+      if (uid == null) return;
+      // Update in Firebase Auth if needed
+      if (email.isNotEmpty && email != currentUser.value!.email) {
+        await _auth.currentUser?.verifyBeforeUpdateEmail(email);
+      }
+      if (password.isNotEmpty) {
+        await _auth.currentUser?.updatePassword(password);
+      }
+      // Update in database
+      await _database.ref('users/$uid').update({
+        'name': username,
+        'email': email,
+      });
+      // Update local user
+      currentUser.value =
+          currentUser.value!.copyWith(name: username, email: email);
+      await fetchUser();
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        "Failed to update info: $e",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
-  Future<void> fetchAccessibleDevices() async {
+  Future<bool> canOpenDoor(String targetDoorId) async {
+    final devicesRef = _database.ref('devices');
+
     try {
-      isLoading.value = true;
+      // Fetch all devices
+      final allDevicesSnapshot = await devicesRef.get();
 
-      final devicesSnapshot = await _firestore.collection('devices').get();
+      if (allDevicesSnapshot.exists && allDevicesSnapshot.value is Map) {
+        final allDevices =
+            Map<String, dynamic>.from(allDevicesSnapshot.value as Map);
 
-      if (currentUser.value != null) {
-        final accessibleObjects = currentUser.value!.accessibleObjects;
-        print("Accessible objects for current user: $accessibleObjects");
+        // Check if the user has already locked another door
+        for (var entry in allDevices.entries) {
+          final doorId = entry.key;
+          final device = Map<String, dynamic>.from(entry.value);
 
-        final now = DateTime.now().microsecondsSinceEpoch;
-
-        deviceState.value = devicesSnapshot.docs
-            .where((doc) => accessibleObjects.contains(doc.data()['name']))
-            .map((doc) {
-          final data = doc.data();
-          final lockUntil = data['lockUntil'] ?? 0;
-
-          final isStillLocked = (lockUntil is int) && lockUntil > now;
-
-          return DeviceModel.fromMap({
-            'id': doc.id,
-            ...data,
-            'locked': isStillLocked,
-          });
-        }).toList();
-
-        print("Devices retrieved: ${deviceState.map((d) => d.name).toList()}");
-
-        deviceState.sort((a, b) {
-          final aStatus = a.status.toLowerCase();
-          final bStatus = b.status.toLowerCase();
-
-          if (aStatus == 'online' && bStatus != 'online') {
-            return -1;
-          } else if (aStatus != 'online' && bStatus == 'online') {
-            return 1;
+          if (device['locked'] == true &&
+              device['lockedBy'] == currentUser.value?.uid) {
+            // If the user has locked another door and it's not the target door, return false
+            if (doorId != targetDoorId) {
+              return false;
+            }
           }
-
-          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        });
-
-        print("Filtered devices: $deviceState");
-      } else {
-        print("Current user is null, cannot fetch accessible devices.");
+        }
       }
+
+      // If no other door is locked by the user, return true
+      return true;
     } catch (e) {
-      print("Error fetching devices: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to fetch devices: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
+      print("Error checking if user can open door: $e");
+      return false;
     }
   }
 
-  void enableSelectionMode(int index) {
-    isSelectionMode.value = true;
-    selectedItems.add(index);
-    update();
-  }
+  Future<void> submitDoor() async {
+    isLoading.value = true;
+    final id = idController.text.trim();
+    final name = nameController.text.trim();
+    final location = locationController.text.trim();
 
-  void toggleDeviceSelection(int index) {
-    if (isSelectionMode.value) {
-      if (selectedItems.contains(index)) {
-        selectedItems.remove(index);
-        // When no items are selected, disable selection mode.
-        if (selectedItems.isEmpty) {
-          isSelectionMode.value = false;
-        }
-      } else {
-        selectedItems.add(index);
-      }
-      update();
+    if (id.length != 6 || !RegExp(r'^\d{6}$').hasMatch(id)) {
+      Get.snackbar("Error", "Door ID must be exactly 6 digits.");
+      return;
     }
-  }
-
-  Future<void> deleteSelectedDevices() async {
-    try {
-      isLoading.value = true;
-
-      final sortedIndices = selectedItems.toList()
-        ..sort((a, b) => b.compareTo(a));
-      final selectedDevices =
-          sortedIndices.map((index) => deviceState[index]).toList();
-
-      final userId = currentUser.value?.uid;
-      if (userId != null) {
-        WriteBatch batch = _firestore.batch();
-
-        final updatedAccessibleObjects = currentUser.value!.accessibleObjects
-            .where((object) =>
-                !selectedDevices.any((device) => device.name == object))
-            .toList();
-
-        batch.update(
-          _firestore.collection('users').doc(userId),
-          {'accessibleObjects': updatedAccessibleObjects},
-        );
-
-        for (final device in selectedDevices) {
-          final userMap = {
-            'uid': userId,
-            'username': currentUser.value!.name,
-          };
-
-          batch.update(
-            _firestore.collection('devices').doc(device.id),
-            {
-              'assignedTo': FieldValue.arrayRemove([userMap]),
-            },
-          );
-        }
-
-        // Commit the batch
-        await batch.commit();
-
-        // Update the local state
-        for (final index in sortedIndices) {
-          deviceState.removeAt(index);
-        }
-        selectedItems.clear();
-        isSelectionMode.value = false;
-
-        // Update the current user's accessibleObjects
-        currentUser.value = currentUser.value!
-            .copyWith(accessibleObjects: updatedAccessibleObjects);
-      }
-    } catch (e) {
-      print("Error deleting selected devices: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to delete selected devices: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> updateDeviceMode(String deviceId, String newMode) async {
-    try {
-      await _firestore.collection('devices').doc(deviceId).update({
-        'mode': newMode,
-      });
-
-      final index = deviceState.indexWhere((device) => device.id == deviceId);
-      if (index != -1) {
-        deviceState[index] = deviceState[index].copyWith(mode: newMode);
-        deviceState.refresh();
-      }
-      logsController.addLog(LogEntry(
-          id: currentUser.value!.uid,
-          timestamp: DateTime.now(),
-          action: 'Access Attempt',
-          status: 'Success',
-          details:
-              '${currentUser.value!.name} has Opened ${deviceState[index].name}',
-          userName: currentUser.value!.name));
-    } catch (e) {
-      print("Error updating device mode: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to update device mode: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
-  }
-
-  Future<void> lockDevice(String deviceId, int duration) async {
-    try {
-      final lockUntil =
-          DateTime.now().microsecondsSinceEpoch + (duration * 1000);
-      await _firestore.collection('devices').doc(deviceId).update({
-        'locked': true,
-        'lockUntil': lockUntil,
-      });
-
-      final index = deviceState.indexWhere((device) => device.id == deviceId);
-      if (index != -1) {
-        deviceState[index] = deviceState[index].copyWith(
-          locked: true,
-          lockUntil: lockUntil,
-        );
-        deviceState.refresh();
-      }
-      Future.delayed(Duration(seconds: duration), () async {
-        await _firestore.collection('devices').doc(deviceId).update({
-          'locked': false,
-          'lockUntil': 0,
-          'mode': 'closed',
-        });
-
-        final index = deviceState.indexWhere((device) => device.id == deviceId);
-        if (index != -1) {
-          deviceState[index] = deviceState[index].copyWith(
-            locked: false,
-            lockUntil: 0,
-            mode: 'closed',
-          );
-          deviceState.refresh();
-        }
-      });
-    } catch (e) {
-      print("Error locking/unlocking door: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to lock/unlock the door: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
-  }
-  // settings logic
-  void groupUsersByObjects() {
-    Map<String, List<UserModel>> grouped = {};
-    for (var user in users) {
-      for (var object in user.accessibleObjects) {
-        if (!grouped.containsKey(object)) {
-          grouped[object] = [];
-        }
-        grouped[object]!.add(user);
-      }
-    }
-    groupedUsers.value = grouped; // populate them
-    filteredGroupedUsers.value = grouped; // initiate them
-  }
-
-  void filterGroups() {
-    String searchText = groupSearchQuery.value.text.toLowerCase();
-
-    if (searchText.isEmpty) {
-      filteredGroupedUsers.value = groupedUsers;
+    if (name.isEmpty || location.isEmpty) {
+      Get.snackbar("Error", "Name and location are required.");
       return;
     }
 
-    Map<String, List<UserModel>> filtered = groupedUsers
-        .map((key, value) {
-          final filteredList = value
-              .where((user) =>
-                  user.name.toLowerCase().contains(searchText) ||
-                  key.toLowerCase().contains(searchText))
-              .toList();
-          return MapEntry(key, filteredList);
-        })
-        .entries
-        .where((entry) => entry.value.isNotEmpty)
-        .toMap();
+    final doorData = DeviceModel(
+      id: id,
+      name: name,
+      status: status.value,
+      location: location,
+      createdAt: DateTime.now(),
+      assignedTo: [],
+      mode: 'closed',
+    );
+    final doorRef = _database.ref('devices/$id');
 
-    filteredGroupedUsers.value = filtered;
-  }
-
-  void addTempObjectsToUser(String userId, List<String> doors) {
-    if (tempSelectedGroups.containsKey(userId)) {
-      tempSelectedGroups[userId]!.addAll(doors);
-    } else {
-      tempSelectedGroups[userId] = doors;
-    }
-  }
-
-  void removeTempObjectFromUser(String userId, String door) {
-    tempSelectedGroups[userId]?.remove(door);
-
-    tempSelectedGroups[userId] = List.from(tempSelectedGroups[userId] ?? []);
-
-    if (tempSelectedGroups[userId]?.isEmpty ?? false) {
-      tempSelectedGroups.remove(userId);
-    }
-  }
-
-  Future<void> addObjectsToUsers() async {
     try {
-      isLoading.value = true;
+      final snapshot = await doorRef.get();
 
-      WriteBatch batch = _firestore.batch();
-
-      for (var entry in tempSelectedGroups.entries) {
-        String userId = entry.key;
-        List<String> doors = entry.value;
-
-        UserModel user = users.firstWhere((user) => user.uid == userId);
-
-        List<String> updatedAccessibleObjects =
-            List.from(user.accessibleObjects);
-        updatedAccessibleObjects.addAll(doors);
-
-        batch.update(
-          _firestore.collection('users').doc(userId),
-          {'accessibleObjects': updatedAccessibleObjects},
-        );
-
-        await _database.ref('users/$userId').update({
-          'accessibleObjects': updatedAccessibleObjects,
-        });
-
-        final devicesSnapshot = await _firestore
-            .collection('devices')
-            .where('name', whereIn: doors)
-            .get();
-
-        for (var deviceDoc in devicesSnapshot.docs) {
-          final deviceRef = deviceDoc.reference;
-
-          Map<String, String> userAssignment = {
-            'uid': userId,
-            'username': user.name,
-          };
-
-          batch.update(deviceRef, {
-            'assignedTo': FieldValue.arrayUnion([userAssignment]),
-          });
-        }
-
-        user.accessibleObjects = updatedAccessibleObjects;
-      }
-
-      await batch.commit();
-      await fetchUsers();
-      await fetchUser();
-      await fetchAccessibleDevices();
-      tempSelectedGroups.clear();
-    } catch (e) {
-      print("Error applying changes: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to apply changes: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> removeObjectsFromUser(String userId, String door) async {
-    try {
-      isLoading.value = true;
-
-      WriteBatch batch = _firestore.batch();
-
-      tempSelectedGroups[userId]?.remove(door);
-      if (tempSelectedGroups[userId]?.isEmpty ?? false) {
-        tempSelectedGroups.remove(userId);
-      }
-
-      UserModel user = users.firstWhere((user) => user.uid == userId);
-      user.accessibleObjects.remove(door);
-
-      batch.update(
-        _firestore.collection('users').doc(userId),
-        {'accessibleObjects': user.accessibleObjects},
-      );
-
-      final devicesSnapshot = await _firestore
-          .collection('devices')
-          .where('name', isEqualTo: door)
-          .get();
-
-      final userMap = {
-        'uid': userId,
-        'username': user.name,
-      };
-
-      for (var deviceDoc in devicesSnapshot.docs) {
-        batch.update(
-          deviceDoc.reference,
-          {
-            'assignedTo': FieldValue.arrayRemove([userMap])
-          },
-        );
-      }
-      await batch.commit();
-
-      print("Removed door $door from user $userId");
-
-      fetchUsers();
-    } catch (e) {
-      print("Error removing door: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to remove door: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> fetchUsersAndGroupObjects() async {
-    try {
-      isGroupsLoaded.value = true;
-      // await fetchUsers();
-      groupUsersByObjects();
-    } catch (e) {
-      print("Error fetching users and grouping objects: $e");
-      Get.snackbar(
-        'Error',
-        'Failed to fetch users and group objects',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isGroupsLoaded.value = false;
-    }
-  }
-
-  Future<void> createUser({
-    required String name,
-    required String email,
-    required String password,
-    required List<String> doors,
-  }) async {
-    try {
-      isLoading.value = true;
-      // Create user with Firebase Authentication
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Get user ID
-      String uid = userCredential.user!.uid;
-
-      // Create user model
-      UserModel newUser = UserModel(
-        uid: uid,
-        name: name,
-        email: email,
-        accessibleObjects: doors,
-        role: 'user',
-      );
-
-      WriteBatch batch = _firestore.batch();
-
-      // Store user data in Firestore
-      batch.set(_firestore.collection('users').doc(uid), newUser.toMap());
-
-      final objectsnapshot = await _firestore
-          .collection('devices')
-          .where('name', whereIn: doors)
-          .get();
-      final userMap = {
-        'uid': uid.trim(),
-        'username': name.trim(),
-      };
-
-      for (var objectDoc in objectsnapshot.docs) {
-        batch.update(
-          objectDoc.reference,
-          {
-            'assignedTo': FieldValue.arrayUnion([userMap])
-          },
-        );
-      }
-
-      await batch.commit();
-      fetchUsers();
-
-      Future.delayed(const Duration(milliseconds: 200), () {
-        Get.snackbar("Success", "User created successfully",
-            colorText: Colors.white,
-            backgroundColor: Colors.green,
+      if (snapshot.exists) {
+        Get.snackbar("Duplicate", "A door with this ID already exists.",
+            backgroundColor: Colors.yellow,
             snackPosition: SnackPosition.BOTTOM);
-      });
-      Get.back();
-    } on FirebaseAuthException catch (e) {
-      String errorMessage = "An error occurred!";
-      if (e.code == 'email-already-in-use') {
-        errorMessage = "This email is already in use.";
-      } else if (e.code == 'weak-password') {
-        errorMessage = "Password is too weak.";
-      }
-      Get.snackbar(
-        "Error",
-        errorMessage,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } catch (e) {
-      Get.snackbar(
-        "Error",
-        "Something went wrong: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> fetchUsers() async {
-    try {
-      isLoading(true);
-
-      // Fetch users from Firestore
-      QuerySnapshot snapshot = await _firestore.collection('users').get();
-      print("Fetched ${snapshot.docs.length} users");
-
-      users.value = snapshot.docs.map((doc) {
-        print("User data: ${doc.data()}");
-        return UserModel.fromMap(doc.data() as Map<String, dynamic>);
-      }).toList();
-
-      if (users.isNotEmpty) {
-        groupUsersByObjects();
-      }
-
-      filteredUsers.value = users;
-      print("Users list updated: ${users.length} users");
-    } catch (e) {
-      print("Error fetching users: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to fetch users: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading(false);
-    }
-  }
-  Future<void> deleteUser(String uid) async {
-    try {
-      final userDoc = await _firestore.collection('users').doc(uid).get();
-      if (!userDoc.exists) {
-        Get.snackbar('Error', 'User not found');
+        isLoading.value = false;
         return;
       }
-
-      final userData = userDoc.data();
-      List<String> accessibleDoors =
-          List<String>.from(userData?['accessibleObjects'] ?? []);
-
-      WriteBatch batch = _firestore.batch();
-
-      for (String door in accessibleDoors) {
-        final devicesnapshot = await _firestore
-            .collection('devices')
-            .where('name', isEqualTo: door)
-            .get();
-
-        for (var deviceDoc in devicesnapshot.docs) {
-          final userMap = {
-            'uid': uid,
-            'username': userData?['name'],
-          };
-
-          batch.update(
-            deviceDoc.reference,
-            {
-              'assignedTo': FieldValue.arrayRemove([userMap]),
-            },
-          );
-        }
-      }
-
-      batch.delete(_firestore.collection('users').doc(uid));
-
-      await batch.commit();
-
-      print("User deleted and devices updated successfully.");
-
-      fetchUsers();
+      await doorRef.set(doorData.toMap());
+      await fetchObjects();
+      Get.snackbar("Success", "Door added Successfully",
+          backgroundColor: Colors.green, snackPosition: SnackPosition.BOTTOM);
+      idController.clear();
+      nameController.clear();
+      locationController.clear();
+      status.value = 'online';
     } catch (e) {
-      print("Error deleting user: $e");
-      Get.snackbar('Error', 'Failed to delete user');
-    }
-  }
-  void filterUsers() {
-    if (userSearchQuery.value.text.isEmpty) {
-      filteredUsers.value = users;
-    } else {
-      filteredUsers.value = users
-          .where((user) => user.name
-              .toLowerCase()
-              .contains(userSearchQuery.value.text.toLowerCase()))
-          .toList();
-    }
-  }
-  void logout() async {
-    await _prefs.clear();
-    await _auth.signOut();
-    await logsController.addLog(LogEntry(
-      id: currentUser.value!.uid,
-      timestamp: DateTime.now(),
-      action: 'Logout',
-      status: 'Success',
-      details: '${currentUser.value!.name} logged out',
-      userName: currentUser.value!.name,
-    ));
-    Get.offNamed(AppRouter.roleSelectionRoute);
-  }
-  Future<void> fetchUser() async {
-    try {
-      isLoading.value = true;
-      String? userId = _prefs.getString("uid");
-      if (userId != null) {
-        DocumentSnapshot doc =
-            await _firestore.collection('users').doc(userId).get();
-        if (doc.exists) {
-          currentUser.value =
-              UserModel.fromMap(doc.data() as Map<String, dynamic>);
-          print("User data: ${currentUser.value?.toMap()}");
-        } else {
-          print("User not found");
-        }
-      } else {
-        print("User ID not found in preferences");
-      }
-    } catch (e) {
-      print("Error fetching user: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to fetch user: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar("Error", "Failed to add door: $e");
     } finally {
       isLoading.value = false;
     }
   }
-  Future<void> fetchObjects() async {
-    try {
-      isLoading.value = true;
-      final devices = await _firestore.collection('devices').get();
-      allObjects.value = devices.docs
-          .map((device) => device.data()['name']?.toString() ?? 'not defined')
-          .toList();
-      allObjects.sort();
-      print("Fetched objects: $allObjects");
-    } catch (e) {
-      print("Error fetching objects: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to fetch objects: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-  Future<List<String>> fetchObjectsIds(List<String> doors) async {
-    final devicesSnapshot = await _firestore.collection('devices').get();
-    List<String> deviceIds = devicesSnapshot.docs
-        .where((doc) => doors.contains(doc.data()['name']))
-        .map((doc) => doc.id)
-        .toList();
-
-    return deviceIds;
-  }
-  @override
-  void onInit() {
-    super.onInit();
-    fetchUser().then((_) async {
-      await fetchAccessibleDevices();
-    });
-  }
-}
-
-*/
-
-class AdminController extends GetxController {
-  final SharedPrefsService _prefs = SharedPrefsService.instance;
-  SharedPrefsService get prefs => _prefs;
-
-  final LogsController logsController = Get.find<LogsController>();
-
-  RxInt currentIndex = 0.obs;
-  RxList pages = const <Widget>[
-    AdminHomeScreen(),
-    AdminLogsScreen(),
-    AdminSettingsScreen()
-  ].obs;
-
-  final FirebaseDatabase _database = FirebaseDatabase.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  var userSearchQuery = TextEditingController().obs;
-  var groupSearchQuery = TextEditingController().obs;
-
-  var users = <UserModel>[].obs;
-  var filteredUsers = <UserModel>[].obs;
-  final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
-
-  var groupedUsers = <String, List<UserModel>>{}.obs;
-  var filteredGroupedUsers = <String, List<UserModel>>{}.obs;
-  var selectedGroups = <String, List<String>>{}.obs;
-  var tempSelectedGroups = <String, List<String>>{}.obs;
-
-  var selectedObjects = <String>[].obs;
-  var userObjects = <String>[].obs;
-  var allObjects = <String>[].obs;
-
-  RxBool isLoading = false.obs;
-  RxBool isUsersLoaded = true.obs;
-  RxBool isObjectsLoaded = true.obs;
-  RxBool isGroupsLoaded = false.obs;
-
-  var deviceState = <DeviceModel>[].obs;
-  var selectedItems = <int>{}.obs;
-  var isSelectionMode = false.obs;
 
   void changePage(int i) {
     currentIndex.value = i;
@@ -866,9 +269,11 @@ class AdminController extends GetxController {
           assignedToData.remove(userId);
 
           if (assignedToData.isEmpty) {
-            // If no users are left, delete the device
-            await deviceRef.remove();
-            print("Device ${device.id} deleted as no users are assigned.");
+            // If no users are left, clear the assignedTo field instead of deleting the device
+            await deviceRef.update({
+              'assignedTo': {},
+            });
+            print("Device ${device.id} has no users assigned.");
           } else {
             // Otherwise, update the assignedTo field
             await deviceRef.update({
@@ -885,6 +290,7 @@ class AdminController extends GetxController {
 
       isSelectionMode.value = false;
       selectedItems.clear();
+
       // Update the current user's accessibleObjects locally
       currentUser.value = currentUser.value!
           .copyWith(accessibleObjects: updatedAccessibleObjects);
@@ -989,67 +395,6 @@ class AdminController extends GetxController {
       isLoading.value = false;
     }
   }
-
-  // Future<void> fetchAccessibleDevices() async {
-  //   try {
-  //     isLoading.value = true;
-  //     final devicesSnapshot = await _database.ref('devices').get();
-  //     if (currentUser.value != null) {
-  //       final accessibleObjects = currentUser.value!.accessibleObjects;
-  //       print("Accessible objects for current user: $accessibleObjects");
-  //       final now = DateTime.now().microsecondsSinceEpoch;
-  //       if (devicesSnapshot.exists) {
-  //         deviceState.value = devicesSnapshot.children.where((doc) {
-  //           final data =
-  //               Map<String, dynamic>.from(doc.value as Map<dynamic, dynamic>);
-  //           return accessibleObjects.contains(data['name']);
-  //         }).map((doc) {
-  //           final data =
-  //               Map<String, dynamic>.from(doc.value as Map<dynamic, dynamic>);
-  //           final lockUntil = data['lockUntil'] ?? 0;
-  //           final isStillLocked = (lockUntil is int) && lockUntil > now;
-  //           return DeviceModel.fromMap({
-  //             'id': doc.key ?? '',
-  //             'name': data['name'] ?? '',
-  //             'status': data['status'] ?? 'unknown',
-  //             'mode': data['mode'] ?? 'closed',
-  //             'locked': isStillLocked,
-  //             'lockUntil': lockUntil,
-  //           });
-  //         }).toList();
-  //         print(
-  //             "Devices retrieved: ${deviceState.map((d) => d.name).toList()}");
-  //         deviceState.sort((a, b) {
-  //           final aStatus = a.status.toLowerCase();
-  //           final bStatus = b.status.toLowerCase();
-  //           if (aStatus == 'online' && bStatus != 'online') {
-  //             return -1;
-  //           } else if (aStatus != 'online' && bStatus == 'online') {
-  //             return 1;
-  //           }
-  //           return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-  //         });
-  //         deviceState.refresh();
-  //         print("Filtered devices: $deviceState");
-  //       } else {
-  //         print("No devices found.");
-  //       }
-  //     } else {
-  //       print("Current user is null, cannot fetch accessible devices.");
-  //     }
-  //     startDeviceListeners();
-  //   } catch (e) {
-  //     print("Error fetching devices: $e");
-  //     Get.snackbar(
-  //       "Error",
-  //       "Failed to fetch devices: ${e.toString()}",
-  //       backgroundColor: Colors.red,
-  //       colorText: Colors.white,
-  //     );
-  //   } finally {
-  //     isLoading.value = false;
-  //   }
-  // }
 
   Future<void> updateDeviceMode(String deviceId, String newMode) async {
     try {
@@ -1251,11 +596,13 @@ class AdminController extends GetxController {
     filteredGroupedUsers.value = filtered;
   }
 
-  void addTempObjectsToUser(String userId, List<String> doors) {
+  void addTempObjectsToUser(String userId, List<String> doorIds) {
     if (tempSelectedGroups.containsKey(userId)) {
-      tempSelectedGroups[userId]!.addAll(doors);
+      final existing = tempSelectedGroups[userId]!;
+      tempSelectedGroups[userId] =
+          {...existing, ...doorIds}.toList(); // remove duplicates
     } else {
-      tempSelectedGroups[userId] = doors;
+      tempSelectedGroups[userId] = doorIds.toSet().toList(); // safe insert
     }
   }
 
@@ -1293,45 +640,40 @@ class AdminController extends GetxController {
 
         // Update the devices' 'assignedTo' in Firebase Realtime Database
         for (String door in doors) {
-          // Assuming you store devices under 'devices' node in Realtime Database
-          final deviceRef = _database.ref('devices/$door');
+          // Fetch the door's unique ID using its name
+          final deviceSnapshot = await _database
+              .ref('devices')
+              .orderByChild('name')
+              .equalTo(door)
+              .get();
 
-          // Fetch the current assignedTo list from the device
-          final deviceSnapshot = await deviceRef.get();
-          List<Map<String, String>> assignedToList = [];
+          if (deviceSnapshot.exists) {
+            final deviceId = deviceSnapshot.children.first.key;
+            final deviceRef = _database.ref('devices/$deviceId');
 
-          // Check if the device snapshot exists and has the 'assignedTo' key
-          if (deviceSnapshot.exists && deviceSnapshot.value != null) {
-            var deviceData = deviceSnapshot.value as Map<dynamic, dynamic>;
-            var assignedToData = deviceData['assignedTo'];
+            // Fetch the current assignedTo list from the device
+            final assignedToSnapshot =
+                await deviceRef.child('assignedTo').get();
+            Map<String, dynamic> assignedToData = {};
 
-            // If 'assignedTo' exists, safely convert it to a list
-            if (assignedToData != null && assignedToData is Map) {
-              assignedToData.forEach((key, value) {
-                if (value != null && value is Map) {
-                  assignedToList.add(Map<String, String>.from(value));
-                }
-              });
+            if (assignedToSnapshot.exists) {
+              assignedToData = Map<String, dynamic>.from(
+                  assignedToSnapshot.value as Map<dynamic, dynamic>);
             }
+
+            // Add the user to the assignedTo list
+            assignedToData[userId] = {
+              'uid': userId,
+              'username': user.name,
+            };
+
+            // Update the device's assignedTo field in Firebase
+            await deviceRef.update({
+              'assignedTo': assignedToData,
+            });
+          } else {
+            print("Device with name $door not found.");
           }
-
-          // Assign the user to the device (preserving existing users)
-          Map<String, String> userAssignment = {
-            'uid': userId,
-            'username': user.name,
-          };
-
-          // Add the user to the list of assigned users (if not already assigned)
-          if (!assignedToList
-              .any((assignedUser) => assignedUser['uid'] == userId)) {
-            assignedToList.add(userAssignment);
-          }
-
-          // Update the device's 'assignedTo' list in Firebase
-          await deviceRef.update({
-            'assignedTo':
-                Map.fromIterable(assignedToList, key: (e) => e['uid']!),
-          });
         }
 
         // Update the local user object in your app state
@@ -1356,50 +698,54 @@ class AdminController extends GetxController {
     }
   }
 
-  Future<void> removeObjectsFromUser(String userId, String door) async {
+  Future<void> removeObjectsFromUser(String userId, String doorName) async {
     try {
       isLoading.value = true;
 
-      // Remove door from the tempSelectedGroups map
-      // tempSelectedGroups[userId]?.remove(door);
-      // if (tempSelectedGroups[userId]?.isEmpty ?? false) {
-      //   tempSelectedGroups.remove(userId);
-      // }
-
       // Find the user and remove the door from their accessible objects
       UserModel user = users.firstWhere((user) => user.uid == userId);
-      user.accessibleObjects.remove(door);
+      user.accessibleObjects.remove(doorName);
 
       // Update the user's accessibleObjects in Realtime Database
       await _database.ref('users/$userId').update({
         'accessibleObjects': user.accessibleObjects,
       });
 
-      // Remove the user from the assigned devices
-      final deviceRef = _database.ref('devices/$door');
-      final deviceSnapshot = await deviceRef.get();
+      // Find the device by its name to get its unique ID
+      final deviceSnapshot = await _database
+          .ref('devices')
+          .orderByChild('name')
+          .equalTo(doorName)
+          .get();
 
       if (deviceSnapshot.exists) {
-        var deviceData = deviceSnapshot.value as Map<dynamic, dynamic>;
-        var assignedToData = deviceData['assignedTo'];
+        final deviceId = deviceSnapshot.children.first.key;
+        final deviceRef = _database.ref('devices/$deviceId');
 
-        // Check if 'assignedTo' exists and is a Map
-        if (assignedToData != null && assignedToData is Map) {
-          // Remove the user from the 'assignedTo' list
-          assignedToData.remove(userId);
+        // Fetch the current assignedTo list from the device
+        final assignedToSnapshot = await deviceRef.child('assignedTo').get();
+        Map<String, dynamic> assignedToData = {};
 
-          // Update the device's 'assignedTo' field in Firebase
-          await deviceRef.update({
-            'assignedTo': assignedToData,
-          });
-
-          print("Removed user $userId from door $door");
+        if (assignedToSnapshot.exists) {
+          assignedToData = Map<String, dynamic>.from(
+              assignedToSnapshot.value as Map<dynamic, dynamic>);
         }
+
+        // Remove the user from the assignedTo list
+        assignedToData.remove(userId);
+
+        // Update the device's assignedTo field in Firebase
+        await deviceRef.update({
+          'assignedTo': assignedToData,
+        });
+
+        print("Removed user $userId from door $doorName");
+      } else {
+        print("Device with name $doorName not found.");
       }
 
       // Refresh the users and devices data
       await fetchUsers();
-      await fetchUser();
       await fetchAccessibleDevices();
     } catch (e) {
       print("Error removing door: $e");
@@ -1467,17 +813,39 @@ class AdminController extends GetxController {
 
       // Loop through the list of doors to assign user to devices
       for (String door in doors) {
-        final deviceRef = _database.ref('devices/$door');
-        final userMap = {
-          'uid': uid.trim(),
-          'username': name.trim(),
-        };
+        // Fetch the door's unique ID using its name
+        final deviceSnapshot = await _database
+            .ref('devices')
+            .orderByChild('name')
+            .equalTo(door)
+            .get();
 
-        await deviceRef.update({
-          'assignedTo': {
-            uid: userMap,
-          },
-        });
+        if (deviceSnapshot.exists) {
+          final deviceId = deviceSnapshot.children.first.key;
+          final deviceRef = _database.ref('devices/$deviceId');
+
+          // Fetch the current 'assignedTo' list
+          final assignedToSnapshot = await deviceRef.child('assignedTo').get();
+          Map<String, dynamic> assignedToData = {};
+
+          if (assignedToSnapshot.exists) {
+            assignedToData = Map<String, dynamic>.from(
+                assignedToSnapshot.value as Map<dynamic, dynamic>);
+          }
+
+          // Add the new user to the 'assignedTo' list
+          assignedToData[uid] = {
+            'uid': uid.trim(),
+            'username': name.trim(),
+          };
+
+          // Update the 'assignedTo' field in Firebase
+          await deviceRef.update({
+            'assignedTo': assignedToData,
+          });
+        } else {
+          print("Device with name $door not found.");
+        }
       }
 
       // Refresh users data
@@ -1576,11 +944,9 @@ class AdminController extends GetxController {
       List<String> accessibleDoors =
           List<String>.from(userData['accessibleObjects'] ?? []);
 
-      // Initialize a list of updates for devices
-      List<Future<void>> deviceUpdates = [];
-
+      // Update the 'assignedTo' field for each door
       for (String door in accessibleDoors) {
-        // Fetch devices assigned to the door
+        // Fetch the door's data
         final deviceSnapshot = await _database
             .ref('devices')
             .orderByChild('name')
@@ -1595,30 +961,24 @@ class AdminController extends GetxController {
             final assignedToSnapshot =
                 await deviceRef.child('assignedTo').get();
 
-            // Safely extract the list of users assigned to this device
-            List<dynamic> assignedToList = [];
-            if (assignedToSnapshot.exists && assignedToSnapshot.value != null) {
-              assignedToList = assignedToSnapshot.value is Iterable
-                  ? List<dynamic>.from(assignedToSnapshot.value as Iterable)
-                  : [];
+            if (assignedToSnapshot.exists) {
+              final assignedToData = Map<String, dynamic>.from(
+                  assignedToSnapshot.value as Map<dynamic, dynamic>);
+
+              // Remove only the user being deleted
+              assignedToData.remove(uid);
+
+              // Update the 'assignedTo' field in the database
+              await deviceRef.update({
+                'assignedTo': assignedToData,
+              });
             }
-
-            // Remove the user from the assignedTo list
-            assignedToList.removeWhere((userMap) => userMap['uid'] == uid);
-
-            // Update the device record in the database
-            deviceUpdates.add(deviceRef.update({
-              'assignedTo': assignedToList,
-            }));
           }
         }
       }
 
       // Remove the user from the users list
       await _database.ref('users/$uid').remove();
-
-      // Wait for all device updates to complete
-      await Future.wait(deviceUpdates);
 
       print("User deleted and devices updated successfully.");
       fetchUsers();
@@ -1627,6 +987,86 @@ class AdminController extends GetxController {
       Get.snackbar('Error', 'Failed to delete user');
     } finally {
       isLoading(false);
+    }
+  }
+
+  Future<void> deleteDevice(String deviceId) async {
+    try {
+      isLoading.value = true;
+
+      // Reference to the device in the database
+      final deviceRef = _database.ref('devices/$deviceId');
+
+      // Fetch the device data
+      final deviceSnapshot = await deviceRef.get();
+      if (!deviceSnapshot.exists) {
+        Get.snackbar("Error", "Device not found.",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+
+      // Get the assignedTo list from the device
+      final deviceData = Map<String, dynamic>.from(deviceSnapshot.value as Map);
+      final assignedToData = Map<String, dynamic>.from(
+          deviceData['assignedTo'] ?? <String, dynamic>{});
+
+      // Remove the device from each user's accessibleObjects
+      for (String userId in assignedToData.keys) {
+        final userRef = _database.ref('users/$userId');
+
+        // Fetch the user's data
+        final userSnapshot = await userRef.get();
+        if (userSnapshot.exists) {
+          final userData = Map<String, dynamic>.from(
+              userSnapshot.value as Map<dynamic, dynamic>);
+          List<String> accessibleObjects =
+              List<String>.from(userData['accessibleObjects'] ?? []);
+
+          // Remove the device from the user's accessibleObjects
+          accessibleObjects.removeWhere((door) => door == deviceData['name']);
+
+          // Update the user's accessibleObjects in the database
+          await userRef.update({
+            'accessibleObjects': accessibleObjects,
+          });
+        }
+      }
+
+      // Delete the device from the database
+      await deviceRef.remove();
+      await fetchObjects();
+
+      // Remove the device from the local state
+      deviceState.removeWhere((device) => device.id == deviceId);
+
+      Get.snackbar("Success", "Device deleted successfully.",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      print("Error deleting device: $e");
+      Get.snackbar("Error", "Failed to delete device: ${e.toString()}",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> updateDeviceStatus(String deviceId, String newStatus) async {
+    try {
+      await _database.ref('devices/$deviceId').update({'status': newStatus});
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        "Failed to update status: $e",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
@@ -1645,14 +1085,14 @@ class AdminController extends GetxController {
   void logout() async {
     await _prefs.clear();
     await _auth.signOut();
-    // await logsController.addLog(LogEntry(
-    //   id: currentUser.value!.uid,
-    //   timestamp: DateTime.now(),
-    //   action: 'Logout',
-    //   status: 'Success',
-    //   details: '${currentUser.value!.name} logged out',
-    //   userName: currentUser.value!.name,
-    // ));
+    await logsController.addLog(LogEntry(
+      id: currentUser.value!.uid,
+      timestamp: DateTime.now(),
+      action: 'Logout',
+      status: 'SUCCESS',
+      details: '${currentUser.value!.name} logged out',
+      userName: currentUser.value!.email,
+    ));
     Get.offNamed(AppRouter.roleSelectionRoute);
   }
 
@@ -1718,8 +1158,11 @@ class AdminController extends GetxController {
         Map<dynamic, dynamic> devicesData =
             snapshot.value as Map<dynamic, dynamic>;
         devicesData.forEach((key, value) {
-          String deviceName = value['name']?.toString() ?? 'not defined';
-          devicesList.add(deviceName);
+          // Ensure the device has a valid name
+          String? deviceName = value['name']?.toString();
+          if (deviceName != null && deviceName.isNotEmpty) {
+            devicesList.add(deviceName);
+          }
         });
         // Sort the devices list
         devicesList.sort();
@@ -1727,13 +1170,7 @@ class AdminController extends GetxController {
         print("Fetched objects: $allObjects");
       } else {
         print("No devices found in Realtime Database.");
-        Get.snackbar(
-          "Error",
-          "No devices found.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        allObjects.clear(); // Clear the list if no devices are found
       }
     } catch (e) {
       print("Error fetching objects: $e");
@@ -1789,5 +1226,13 @@ class AdminController extends GetxController {
       await fetchAccessibleDevices();
     });
     listenToCurrentUserChanges();
+  }
+
+  @override
+  void onClose() {
+    idController.dispose();
+    nameController.dispose();
+    locationController.dispose();
+    super.onClose();
   }
 }

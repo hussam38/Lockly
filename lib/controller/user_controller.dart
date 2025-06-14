@@ -32,6 +32,40 @@ class UserController extends GetxController {
 
   var isLoading = false.obs;
 
+  Future<bool> canOpenDoor(String targetDoorId) async {
+    final devicesRef = _database.ref('devices');
+
+    try {
+      // Fetch all devices
+      final allDevicesSnapshot = await devicesRef.get();
+
+      if (allDevicesSnapshot.exists && allDevicesSnapshot.value is Map) {
+        final allDevices =
+            Map<String, dynamic>.from(allDevicesSnapshot.value as Map);
+
+        // Check if the user has already locked another door
+        for (var entry in allDevices.entries) {
+          final doorId = entry.key;
+          final device = Map<String, dynamic>.from(entry.value);
+
+          if (device['locked'] == true &&
+              device['lockedBy'] == currentUser.value?.uid) {
+            // If the user has locked another door and it's not the target door, return false
+            if (doorId != targetDoorId) {
+              return false;
+            }
+          }
+        }
+      }
+
+      // If no other door is locked by the user, return true
+      return true;
+    } catch (e) {
+      print("Error checking if user can open door: $e");
+      return false;
+    }
+  }
+
   void changePage(int i) {
     currentIndex.value = i;
   }
@@ -121,9 +155,11 @@ class UserController extends GetxController {
           assignedToData.remove(userId);
 
           if (assignedToData.isEmpty) {
-            // If no users are left, delete the device
-            await deviceRef.remove();
-            print("Device ${device.id} deleted as no users are assigned.");
+            // If no users are left, clear the assignedTo field instead of deleting the device
+            await deviceRef.update({
+              'assignedTo': {},
+            });
+            print("Device ${device.id} has no users assigned.");
           } else {
             // Otherwise, update the assignedTo field
             await deviceRef.update({
@@ -137,8 +173,9 @@ class UserController extends GetxController {
       for (final device in selectedDevices) {
         deviceState.removeWhere((d) => d.id == device.id);
       }
-      selectedItems.clear();
+
       isSelectionMode.value = false;
+      selectedItems.clear();
 
       // Update the current user's accessibleObjects locally
       currentUser.value = currentUser.value!
@@ -410,6 +447,14 @@ class UserController extends GetxController {
   Future<void> logout() async {
     await _prefs.clear();
     await _auth.signOut();
+    await logsController.addLog(LogEntry(
+      id: currentUser.value!.uid,
+      timestamp: DateTime.now(),
+      action: 'Logout',
+      status: 'SUCCESS',
+      details: '${currentUser.value!.name} logged out',
+      userName: currentUser.value!.email,
+    ));
     Get.offNamed(AppRouter.roleSelectionRoute);
   }
 
@@ -464,7 +509,6 @@ class UserController extends GetxController {
     }
   }
 
-  
   @override
   void onInit() {
     super.onInit();

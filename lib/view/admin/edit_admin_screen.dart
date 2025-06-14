@@ -1,10 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/controller/admin_controller.dart';
 import 'package:graduation_project/services/helpers.dart';
-import 'package:image_picker/image_picker.dart';
 
 class EditAdminScreen extends StatefulWidget {
   const EditAdminScreen({super.key});
@@ -18,27 +16,38 @@ class _EditAdminScreenState extends State<EditAdminScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  XFile? _imageFile;
-
-  final ImagePicker _picker = ImagePicker();
-
-  Future<void> _pickImage() async {
-    try {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      setState(() {
-        _imageFile = pickedFile;
-      });
-    } catch (e) {
-      Get.snackbar('Error', 'Error picking image: $e');
+  final AdminController adminController = Get.find<AdminController>();
+  @override
+  void initState() {
+    super.initState();
+    final admin = adminController.currentUser.value;
+    if (admin != null) {
+      _usernameController.text = admin.name;
+      _emailController.text = admin.email;
     }
   }
 
-  void _saveChanges() {
+  void _saveChanges() async {
     if (_formKey.currentState!.validate()) {
-      // Save changes
-      // You can add your logic to save the changes here
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Changes saved successfully!')),
+      final username = _usernameController.text.trim();
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      await adminController.updateInfo(
+        username: username.isEmpty
+            ? adminController.currentUser.value?.name ?? ''
+            : username,
+        email: email.isEmpty
+            ? adminController.currentUser.value?.email ?? ''
+            : email,
+        password: password, // Only update if not empty in controller
+      );
+      Get.snackbar(
+        "Success",
+        'Changes saved successfully!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
       );
     }
   }
@@ -49,80 +58,75 @@ class _EditAdminScreenState extends State<EditAdminScreen> {
       appBar: AppBar(
         title: const Text('Edit User'),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0.w),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: _imageFile != null
-                      ? FileImage(File(_imageFile!.path))
-                      : null,
-                  child: _imageFile == null
-                      ? const Icon(Icons.add_a_photo, size: 50)
-                      : null,
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0.w),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 16.0.h),
+                TextFormField(
+                  controller: _usernameController,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    border: const OutlineInputBorder(),
+                    labelStyle: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a username';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              SizedBox(height: 16.0.h),
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
+                SizedBox(height: 16.0.h),
+                TextFormField(
+                  controller: _emailController,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an email';
+                    }
+                    if (!isValidEmail(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a username';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.0.h),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
+                SizedBox(height: 16.0.h),
+                TextFormField(
+                  controller: _passwordController,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  decoration: InputDecoration(
+                      labelText: 'Password (leave blank to keep current)',
+                      border: const OutlineInputBorder(),
+                      labelStyle: Theme.of(context).textTheme.bodyMedium),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return null;
+                    } else if (value.length < 8) {
+                      return 'Password must be at least 6 characters long';
+                    } else if (!isStrongPassword(value)) {
+                      return 'password must be Strong';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an email';
-                  }
-                  if (!isValidEmail(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.0.h),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
+                SizedBox(height: 16.0.h),
+                ElevatedButton(
+                  onPressed: _saveChanges,
+                  child: const Text('Save Changes'),
                 ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
-                  } else if (value.length < 8) {
-                    return 'Password must be at least 6 characters long';
-                  } else if (!isStrongPassword(value)) {
-                    return 'password must be Strong';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16.0.h),
-              ElevatedButton(
-                onPressed: _saveChanges,
-                child: const Text('Save Changes'),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

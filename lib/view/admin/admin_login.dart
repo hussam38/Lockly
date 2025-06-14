@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:graduation_project/shared/extensions.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/components.dart';
 import 'package:graduation_project/utils/router.dart';
@@ -53,8 +54,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_rounded,
-                      onChanged: (value) {
-                        emailController.text = value;
+                      onSaved: (value) {
+                        emailController.text = value.orEmpty();
                       },
                       context: context,
                       hintText: 'e.g. name@mail.com',
@@ -70,30 +71,36 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       },
                     ),
                   ),
-                  SizedBox(
-                    height: size.width * .25.h,
-                    child: textFormComponent(
-                      controller: passwordController,
-                      keyboardType: TextInputType.visiblePassword,
-                      onChanged: (value) {
-                        passwordController.text = value;
-                      },
-                      prefixIcon: Icons.lock,
-                      suffixIcon: Icons.visibility,
-                      context: context,
-                      hintText: 'e.g. Gg@123456',
-                      labelText: 'Password',
-                      isPassword: false,
-                      validate: (value) {
-                        if (value!.isEmpty) {
-                          return "password can't be empty";
-                        } else if (value.length < 8) {
-                          return "password must be at least 8 characters";
-                        } else if (!isStrongPassword(value)) {
-                          return "please enter a strong password";
-                        }
-                        return null;
-                      },
+                  Obx(
+                    () => SizedBox(
+                      height: size.width * .25.h,
+                      child: textFormComponent(
+                        controller: passwordController,
+                        keyboardType: TextInputType.visiblePassword,
+                        onSaved: (value) {
+                          passwordController.text = value!;
+                        },
+                        prefixIcon: Icons.lock,
+                        suffixIcon: authController.isPasswordVisible.value
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        onSuffixPressed:
+                            authController.togglePasswordVisibility,
+                        context: context,
+                        hintText: 'e.g. Gg@123456',
+                        labelText: 'Password',
+                        isPassword: !authController.isPasswordVisible.value,
+                        validate: (value) {
+                          if (value!.isEmpty) {
+                            return "password can't be empty";
+                          } else if (value.length < 8) {
+                            return "password must be at least 8 characters";
+                          } else if (!isStrongPassword(value)) {
+                            return "please enter a strong password";
+                          }
+                          return null;
+                        },
+                      ),
                     ),
                   ),
                   Obx(
@@ -115,7 +122,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                   color: ColorManager.white,
                                 ),
                               ),
-                        onPressed: () async{                          
+                        onPressed: () async {
                           if (formKey.currentState!.validate()) {
                             await authController.loginUser(
                                 emailController.text, passwordController.text);

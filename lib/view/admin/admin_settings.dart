@@ -48,21 +48,21 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ),
                     SizedBox(width: 16.0.w),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${adminController.currentUser.value?.name}',
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                          SizedBox(height: 4.0.h),
-                          Text(
-                            '${adminController.currentUser.value?.email}',
-                            style: Theme.of(context).textTheme.labelSmall,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                      child: Obx(() => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${adminController.currentUser.value?.name}',
+                                style: Theme.of(context).textTheme.labelMedium,
+                              ),
+                              SizedBox(height: 4.0.h),
+                              Text(
+                                '${adminController.currentUser.value?.email}',
+                                style: Theme.of(context).textTheme.labelSmall,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          )),
                     ),
                   ],
                 ),

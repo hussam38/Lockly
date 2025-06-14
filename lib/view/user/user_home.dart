@@ -137,18 +137,35 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                                               'online' &&
                                                           !isLocked)
                                                       ? (bool value) async {
-                                                          final newMode = value
-                                                              ? 'opened'
-                                                              : 'closed';
-                                                          await userController
-                                                              .updateDeviceMode(
-                                                                  device.id,
-                                                                  newMode);
-                                                          if (value) {
+                                                          final canOpen =
+                                                              await userController
+                                                                  .canOpenDoor(
+                                                                      device
+                                                                          .id);
+                                                          if (canOpen) {
+                                                            final newMode =
+                                                                value
+                                                                    ? 'opened'
+                                                                    : 'closed';
                                                             await userController
-                                                                .lockDevice(
+                                                                .updateDeviceMode(
                                                                     device.id,
-                                                                    30);
+                                                                    newMode);
+                                                            if (value) {
+                                                              await userController
+                                                                  .lockDevice(
+                                                                      device.id,
+                                                                      10);
+                                                            }
+                                                          } else {
+                                                            Get.snackbar(
+                                                                "Error",
+                                                                "You cannot open this door now.",
+                                                                snackPosition:
+                                                                    SnackPosition
+                                                                        .BOTTOM,
+                                                                backgroundColor:
+                                                                    Colors.red);
                                                           }
                                                         }
                                                       : null,

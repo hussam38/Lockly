@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future startDelay() async {
     await Future.delayed(const Duration(seconds: 1));
     _authController = Get.find<AuthController>();
-    _authController.checkUserStatus();
+    _authController.canAuthWithBiometrics();
   }
 
   @override
