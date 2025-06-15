@@ -59,6 +59,7 @@ class AdminController extends GetxController {
   final nameController = TextEditingController();
   final locationController = TextEditingController();
   final status = 'online'.obs;
+  final role = 'user'.obs;
 
   Future<void> updateInfo({
     required String username,
@@ -424,7 +425,7 @@ class AdminController extends GetxController {
           id: currentUser.value!.uid,
           timestamp: DateTime.now(),
           action: 'Access Attempt',
-          status: 'Success',
+          status: 'SUCCESS',
           details:
               '${currentUser.value!.name} has ${newMode == 'opened' ? 'opened' : 'closed'} ${deviceState[index].name}',
           userName: currentUser.value!.name));
@@ -784,6 +785,7 @@ class AdminController extends GetxController {
     required String email,
     required String password,
     required List<String> doors,
+    required String role,
   }) async {
     try {
       isLoading.value = true;
@@ -804,7 +806,7 @@ class AdminController extends GetxController {
         name: name,
         email: email,
         accessibleObjects: doors,
-        role: 'user',
+        role: role,
       );
 
       // Store user data in Realtime Database

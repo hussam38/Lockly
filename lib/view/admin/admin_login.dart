@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:graduation_project/shared/extensions.dart';
 import 'package:graduation_project/utils/colors.dart';
 import 'package:graduation_project/utils/components.dart';
-import 'package:graduation_project/utils/router.dart';
 import 'package:graduation_project/utils/values_manager.dart';
 
 import '../../controller/auth_controller.dart';
@@ -131,33 +130,33 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       ),
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Not a Member?",
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall!
-                            .copyWith(color: ColorManager.black),
-                      ),
-                      MaterialButton(
-                        onPressed: () {
-                          Get.toNamed(AppRouter.adminRegisterRoute);
-                        },
-                        focusNode: FocusNode(),
-                        highlightColor: ColorManager.transparent,
-                        splashColor: ColorManager.transparent,
-                        child: Text(
-                          "Sign Up",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge!
-                              .copyWith(color: ColorManager.primarycolor),
-                        ),
-                      ),
-                    ],
-                  ),
+                  //   Row(
+                  //     mainAxisAlignment: MainAxisAlignment.center,
+                  //     children: [
+                  //       Text(
+                  //         "Not a Member?",
+                  //         style: Theme.of(context)
+                  //             .textTheme
+                  //             .bodySmall!
+                  //             .copyWith(color: ColorManager.black),
+                  //       ),
+                  //       MaterialButton(
+                  //         onPressed: () {
+                  //           Get.toNamed(AppRouter.adminRegisterRoute);
+                  //         },
+                  //         focusNode: FocusNode(),
+                  //         highlightColor: ColorManager.transparent,
+                  //         splashColor: ColorManager.transparent,
+                  //         child: Text(
+                  //           "Sign Up",
+                  //           style: Theme.of(context)
+                  //               .textTheme
+                  //               .titleLarge!
+                  //               .copyWith(color: ColorManager.primarycolor),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
                 ],
               ),
             ),

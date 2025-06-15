@@ -187,7 +187,7 @@ class AuthController extends GetxController {
           timestamp: DateTime.now(),
           action: 'Login',
           status: 'FAILED',
-          details: 'User ${_auth.currentUser!.email} log in failed.',
+          details: 'User ${_auth.currentUser?.email ?? ""} log in failed.',
           userName: _auth.currentUser?.email ?? 'Unknown',
         ),
       );
